@@ -64,6 +64,8 @@ Follows faber-ui's conventions ([ADR-0010](decisions/0010-frontend-follows-faber
 
 A bug fix starts with a failing test that reproduces it.
 
+**By hand in the native window**, after a large group of changes: `scripts/test-ssh-server.sh up`, then `bun run tauri build --debug --bundles app` and open `target/debug/bundle/macos/Sallygate.app` (an agent can drive a bundled app, not the `tauri dev` binary). Add a host for `127.0.0.1:2222`, user `sallygate`, key `tests/ssh-server/.keys/id_ed25519`; check that the fingerprint matches `docker exec sallygate-test-ssh-server-1 ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`, then connect, type, resize (`stty size`), open a second tab, close tabs (`ps` on the server shows no sessions left), edit and delete the host. Agents drive only the Sallygate window, never the whole screen; typing into the webview from the background drops characters, so leave typing-heavy steps to the owner.
+
 ## Commits and branches
 
 - **For now, commit straight to `develop`.** Typed branches (`feat/`, `fix/`, `refactor/`, `docs/`, `test/`, `chore/`, `ci/` plus a short kebab-case name, e.g. `feat/host-drawer`) come back later ([ADR-0007](decisions/0007-semver-and-gitflow.md)).

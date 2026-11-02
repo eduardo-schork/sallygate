@@ -6,9 +6,16 @@ The step-by-step plan for building Sallygate, and the place where progress is tr
 
 ## Current focus
 
-- **Stage:** 2 — Hosts and tabs (hosts, editor and tabs built)
-- **Next task:** `credentials` (password, ssh-agent, keychain)
-- **Blocked on:** nothing; the owner still has to try their own server
+- **Stage:** 2 — Hosts and tabs. Saved hosts, the host drawer and session tabs are built and checked in the native window.
+- **What works today:** save, edit and delete hosts in groups (`hosts.json`); search; connect with a private key file (no passphrase); confirm an unknown server key, block a changed one; a resizable terminal per tab; several tabs at once; closing a tab closes its session.
+- **Next tasks, in order:**
+  1. `credentials` context: `SecretStore` port and `KeychainSecretStore` adapter (`keyring`); password and ssh-agent login; key passphrases. Needs an ADR on how the host drawer asks for a secret without it reaching `hosts.json` or the UI state.
+  2. Import `~/.ssh/config` into saved hosts.
+  3. The owner uses it daily for a week, then `release/0.1.0`.
+- **Owner to do:** try the app on their own server (and `exit` from a shell); push `develop` and make it the default branch; register `sallygate.com`; reserve the `sallygate` crate.
+- **Open questions:** see [architecture.md](architecture.md#open-questions).
+- **Known shortcuts:** the terminal uses the system monospace font until faber-ui has a mono token (`grep -rn "shortcut:" src`).
+- **Blocked on:** nothing.
 
 Update this block whenever the focus moves.
 
@@ -107,6 +114,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-02** — Handoff: _Current focus_ now lists what works, the next tasks in order, owner tasks and known shortcuts; the manual native-window check is written down in [conventions.md](conventions.md#tests); `/resume` (`.claude/skills/resume/`) brings a new session up to speed.
 - **2026-11-02** — Native window check of Stages 1 and 2 on a debug bundle (`bun run tauri build --debug --bundles app`) against the test server: add a host to a group, connect, trust the key (fingerprint matched the container's), run commands (`sallygate-42`), resize (`stty size` 42×146 → 33×115), open a second tab with no second trust prompt, switch tabs with output kept, close both tabs (server shows no sessions left), edit and delete the host (`hosts.json` empty again). No bugs found. Not checked: `exit` from the shell, the owner's server.
 - **2026-11-02** — Stage 2, first part: saved hosts (domain, use cases, `hosts.json`, commands), hosts screen, host drawer and session tabs. `bun run check:full` passes (46 UI tests, Rust unit and integration tests). Checked in the browser pane with an in-memory core: add, list, connect (opens a tab), close tab, edit, delete. Fixed there: card lost its faber-ui styles (`as` vs `forwardedAs`), clipped New host button, drawer title flipping while closing. The native-window check is still pending: Computer use is not enabled in this session.
 - **2026-11-02** — Desktop commands and the Stage 1 UI landed: connect form, host key dialogs, `xterm.js` terminal. 11 Rust tests for the contract and 28 UI tests pass; the form and error display were checked in the browser. The native window flow still needs a manual check.

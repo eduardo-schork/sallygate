@@ -12,6 +12,10 @@ This folder is the project's living memory. Each kind of knowledge has one home,
 | [security.md](security.md)                 | What we protect, from whom, and the rules that follow                                                                 | A new secret, trust boundary or attack surface appears                                      |
 | [glossary.md](glossary.md)                 | Domain and project terms                                                                                              | A new term shows up in code or docs                                                         |
 
+## Resuming work
+
+In a new agent session, run `/resume`: it reads the brief, this index and the plan's _Current focus_, checks git and the local checks, and reports where the work stands and what comes next. By hand, read [development-plan.md](development-plan.md#current-focus) first.
+
 ## Living memory rules
 
 1. **Docs change with the code.** A PR that changes behavior, structure or a decision also updates the matching docs. A PR that leaves the docs stale is not done.
