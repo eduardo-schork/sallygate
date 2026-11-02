@@ -1,4 +1,4 @@
-import { CenterFlex, SPACINGS, VFlex } from '@faber-ui/react';
+import { VFlex } from '@faber-ui/react';
 import styled, { createGlobalStyle } from 'styled-components';
 
 // A desktop window has no page scroll: the app always fills it.
@@ -15,10 +15,12 @@ export const AppRoot = styled(VFlex).attrs({ forwardedAs: 'main' })`
   block-size: 100%;
 `;
 
-/** Centers whatever the screen shows when there is no terminal. */
-export const AppCenter = styled(CenterFlex)`
+/** The hosts screen; hidden, not unmounted, while a session tab is in front. */
+export const HostsPanel = styled(VFlex)`
   flex: 1;
   min-block-size: 0;
-  padding: ${SPACINGS.LG};
-  overflow-y: auto;
+
+  &[hidden] {
+    display: none;
+  }
 `;

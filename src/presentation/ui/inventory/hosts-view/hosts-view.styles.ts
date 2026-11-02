@@ -1,0 +1,16 @@
+import { SIZES, SPACINGS, VFlex } from '@faber-ui/react';
+import styled from 'styled-components';
+
+export const HostsViewRoot = styled(VFlex)`
+  flex: 1;
+  min-block-size: 0;
+  padding: ${SPACINGS.LG};
+  overflow-y: auto;
+`;
+
+/** Cards flow into as many columns as fit, each at least a readable width. */
+export const HostGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(${SIZES.XXL} * 4)), 1fr));
+  gap: ${SPACINGS.SM};
+`;

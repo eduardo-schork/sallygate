@@ -21,6 +21,7 @@
     "check:full": "sh scripts/check-all.sh --integration"
   },
   "dependencies": {
+    "@faber-ui/icons": "^0.2.0",
     "@faber-ui/react": "^0.4.0",
     "@tauri-apps/api": "^2.12.4",
     "@xterm/addon-fit": "^0.11.0",

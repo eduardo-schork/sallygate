@@ -16,7 +16,7 @@ export function SessionEndedNotice({
   serverLabel,
   end,
   onReconnect,
-  onBack,
+  onClose,
 }: TSessionEndedNoticeProps) {
   return (
     <EmptyState
@@ -24,8 +24,8 @@ export function SessionEndedNotice({
       description={describeEnd({ end })}
       actions={
         <HFlex gap="SM" justify={FLEX_JUSTIFIES.CENTER}>
-          <Button variant="outline" onClick={onBack}>
-            Back
+          <Button variant="outline" onClick={onClose}>
+            Close tab
           </Button>
           <Button onClick={onReconnect}>Reconnect</Button>
         </HFlex>

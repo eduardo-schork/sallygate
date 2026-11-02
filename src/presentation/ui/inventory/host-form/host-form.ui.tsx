@@ -1,47 +1,50 @@
-import {
-  Alert,
-  Button,
-  Field,
-  FLEX_ALIGNS,
-  FLEX_JUSTIFIES,
-  HFlex,
-  Input,
-  Text,
-  VFlex,
-} from '@faber-ui/react';
+import { Field, FLEX_ALIGNS, HFlex, Input, VFlex } from '@faber-ui/react';
 import { type SubmitEvent, useState } from 'react';
 
-import { CONNECTION_ERROR_COPY } from '../connection-error-copy';
-import { AddressField } from './connect-form.styles';
-import {
-  DEFAULT_KEY_FILE_PATH,
-  DEFAULT_SSH_PORT,
-  INITIAL_TERMINAL_SIZE,
-} from './connect-form.constants';
-import type { TConnectFormProps } from './connect-form.types';
+import { DEFAULT_KEY_FILE_PATH, DEFAULT_SSH_PORT } from './host-form.constants';
+import { AddressField } from './host-form.styles';
+import type { THostFormProps } from './host-form.types';
 
-export function ConnectForm({ initialRequest, isConnecting, error, onConnect }: TConnectFormProps) {
-  const [address, setAddress] = useState(initialRequest?.endpoint.address ?? '');
-  const [port, setPort] = useState(String(initialRequest?.endpoint.port ?? DEFAULT_SSH_PORT));
-  const [username, setUsername] = useState(initialRequest?.endpoint.username ?? '');
-  const [keyFilePath, setKeyFilePath] = useState(
-    initialRequest?.keyFilePath ?? DEFAULT_KEY_FILE_PATH,
-  );
+/** Everything Sallygate needs to reach a server. Validation happens in the core. */
+export function HostForm({ host, formId, onSubmit }: THostFormProps) {
+  const [label, setLabel] = useState(host?.label ?? '');
+  const [group, setGroup] = useState(host?.group ?? '');
+  const [address, setAddress] = useState(host?.endpoint.address ?? '');
+  const [port, setPort] = useState(String(host?.endpoint.port ?? DEFAULT_SSH_PORT));
+  const [username, setUsername] = useState(host?.endpoint.username ?? '');
+  const [keyFilePath, setKeyFilePath] = useState(host?.keyFilePath ?? DEFAULT_KEY_FILE_PATH);
 
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onConnect({
+    onSubmit({
+      ...(host ? { id: host.id } : {}),
+      label,
+      group,
       endpoint: { address, port: Number(port), username },
       keyFilePath,
-      ...INITIAL_TERMINAL_SIZE,
     });
   };
 
-  const errorCopy = error ? CONNECTION_ERROR_COPY[error.kind] : undefined;
-
   return (
-    <form onSubmit={handleSubmit} aria-label="Connect to a server">
+    <form id={formId} onSubmit={handleSubmit} aria-label={host ? 'Edit host' : 'New host'}>
       <VFlex gap="MD">
+        <Field label="Name" description="How the host appears in your list">
+          <Input
+            name="label"
+            value={label}
+            onChange={(event) => setLabel(event.target.value)}
+            autoComplete="off"
+            required
+          />
+        </Field>
+        <Field label="Group" description="Optional, like Cloud or Home">
+          <Input
+            name="group"
+            value={group}
+            onChange={(event) => setGroup(event.target.value)}
+            autoComplete="off"
+          />
+        </Field>
         <HFlex gap="SM" align={FLEX_ALIGNS.END}>
           <AddressField label="Address" description="Hostname or IP address">
             <Input
@@ -88,19 +91,6 @@ export function ConnectForm({ initialRequest, isConnecting, error, onConnect }: 
             required
           />
         </Field>
-        {error && errorCopy ? (
-          <Alert color="error" title={errorCopy.title} role="alert">
-            <VFlex gap="XXS">
-              <span>{errorCopy.hint}</span>
-              <Text.Small>{error.message}</Text.Small>
-            </VFlex>
-          </Alert>
-        ) : null}
-        <HFlex justify={FLEX_JUSTIFIES.END}>
-          <Button type="submit" loading={isConnecting}>
-            Connect
-          </Button>
-        </HFlex>
       </VFlex>
     </form>
   );

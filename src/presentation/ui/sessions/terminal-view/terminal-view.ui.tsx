@@ -38,6 +38,10 @@ export function TerminalView({ output, onInput, onResize }: TTerminalViewProps) 
     terminal.open(container);
 
     const fitToContainer = () => {
+      // A hidden tab has no size; fitting it would shrink the remote terminal to nothing.
+      if (container.clientWidth === 0 || container.clientHeight === 0) {
+        return;
+      }
       fitAddon.fit();
       onResizeRef.current(terminal.cols, terminal.rows);
     };

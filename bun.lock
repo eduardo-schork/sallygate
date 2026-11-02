@@ -5,6 +5,7 @@
     "": {
       "name": "sallygate",
       "dependencies": {
+        "@faber-ui/icons": "^0.2.0",
         "@faber-ui/react": "^0.4.0",
         "@tauri-apps/api": "^2.12.4",
         "@xterm/addon-fit": "^0.11.0",
@@ -121,6 +122,8 @@
     "@exodus/bytes": ["@exodus/bytes@1.16.0", "", { "peerDependencies": { "@noble/hashes": "^1.8.0 || ^2.0.0" }, "optionalPeers": ["@noble/hashes"] }, "sha512-IcpW84uEn3N7ETtNZMlxKhfl6Pec8rUNGOTBtWbK1FKhJxIFAptZyVrvVRVBimAJxJCgc3PxepxkdWWG4DVzfA=="],
 
     "@faber-ui/fonts": ["@faber-ui/fonts@0.1.0", "", { "dependencies": { "@fontsource-variable/plus-jakarta-sans": "^5.2.8" } }, "sha512-WDpaQXF6HRyb1lqV4T9gZZK9fWn8Z1d2uBJp5jVRReJ06qYFZVj3vBQAnRDmYuN48EYhAOljhyzc8m+bp08YiA=="],
+
+    "@faber-ui/icons": ["@faber-ui/icons@0.2.0", "", { "peerDependencies": { "react": "^18.2.0 || ^19.0.0" } }, "sha512-bYMR5BKTIqzKA4+deEb8owoDcoe3gXy7GaCFBYjlaVPhJ2ab3eSPSitg77erEcsJRM1SoM7DDC9h08DuxTY74Q=="],
 
     "@faber-ui/react": ["@faber-ui/react@0.4.0", "", { "dependencies": { "@faber-ui/themes": "0.4.0", "@faber-ui/tokens": "0.4.0", "@radix-ui/react-dropdown-menu": "^2.1.24", "@radix-ui/react-popover": "^1.1.23", "@radix-ui/react-select": "^2.3.8", "@radix-ui/react-tooltip": "^1.2.16" }, "peerDependencies": { "react": "^18.2.0 || ^19.0.0", "react-dom": "^18.2.0 || ^19.0.0", "styled-components": "^6.1.0" } }, "sha512-UPut+/3Hn+YUyDkBmgFFrnj1lmm2RIsdZNkAF60fjqEn1/2wPx68iQ3A1j/wjEvhC1dLiSzd9stUoq7ogge5xA=="],
 

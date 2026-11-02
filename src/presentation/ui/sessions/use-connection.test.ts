@@ -39,7 +39,9 @@ const rejectWith = (error: TCommandError) => vi.fn<TOpenSession>().mockRejectedV
 describe('useConnection', () => {
   it('SHOULD be connected when the session opens', async () => {
     const sessions = inMemorySessions(() => Promise.resolve('session-1'));
-    const { result } = renderHook(() => useConnection({ sessions, trust: inMemoryTrust() }));
+    const { result } = renderHook(() =>
+      useConnection(request, { sessions, trust: inMemoryTrust() }),
+    );
 
     await act(() => result.current.connect(request));
 
@@ -53,7 +55,7 @@ describe('useConnection', () => {
       .mockResolvedValueOnce('session-1');
     const trust = inMemoryTrust();
     const { result } = renderHook(() =>
-      useConnection({ sessions: inMemorySessions(openSession), trust }),
+      useConnection(request, { sessions: inMemorySessions(openSession), trust }),
     );
 
     await act(() => result.current.connect(request));
@@ -70,7 +72,7 @@ describe('useConnection', () => {
     const sessions = inMemorySessions(
       rejectWith({ kind: 'hostKeyChanged', message: 'changed', hostKey }),
     );
-    const { result } = renderHook(() => useConnection({ sessions, trust }));
+    const { result } = renderHook(() => useConnection(request, { sessions, trust }));
 
     await act(() => result.current.connect(request));
 
@@ -82,7 +84,9 @@ describe('useConnection', () => {
     const sessions = inMemorySessions(
       rejectWith({ kind: 'authenticationRejected', message: 'rejected' }),
     );
-    const { result } = renderHook(() => useConnection({ sessions, trust: inMemoryTrust() }));
+    const { result } = renderHook(() =>
+      useConnection(request, { sessions, trust: inMemoryTrust() }),
+    );
 
     await act(() => result.current.connect(request));
 
@@ -99,7 +103,9 @@ describe('useConnection', () => {
       emit = onEvent;
       return Promise.resolve('session-1');
     });
-    const { result } = renderHook(() => useConnection({ sessions, trust: inMemoryTrust() }));
+    const { result } = renderHook(() =>
+      useConnection(request, { sessions, trust: inMemoryTrust() }),
+    );
     await act(() => result.current.connect(request));
 
     act(() => {
@@ -114,11 +120,45 @@ describe('useConnection', () => {
 
   it('SHOULD forward input to the open session', async () => {
     const sessions = inMemorySessions(() => Promise.resolve('session-1'));
-    const { result } = renderHook(() => useConnection({ sessions, trust: inMemoryTrust() }));
+    const { result } = renderHook(() =>
+      useConnection(request, { sessions, trust: inMemoryTrust() }),
+    );
     await act(() => result.current.connect(request));
 
     result.current.sendInput('ls\r');
 
     expect(sessions.writeToSession).toHaveBeenCalledWith('session-1', 'ls\r');
+  });
+
+  it('SHOULD close the session when the tab closes', async () => {
+    const sessions = inMemorySessions(() => Promise.resolve('session-1'));
+    const { result, unmount } = renderHook(() =>
+      useConnection(request, { sessions, trust: inMemoryTrust() }),
+    );
+    await act(() => result.current.connect(request));
+
+    unmount();
+
+    expect(sessions.closeSession).toHaveBeenCalledWith('session-1');
+  });
+
+  it('SHOULD close a session that opens after its tab already closed', async () => {
+    let finishOpening: (sessionId: string) => void = () => undefined;
+    const sessions = inMemorySessions(
+      () =>
+        new Promise<string>((resolve) => {
+          finishOpening = resolve;
+        }),
+    );
+    const { result, unmount } = renderHook(() =>
+      useConnection(request, { sessions, trust: inMemoryTrust() }),
+    );
+    const connecting = result.current.connect(request);
+
+    unmount();
+    finishOpening('late-session');
+    await connecting;
+
+    expect(sessions.closeSession).toHaveBeenCalledWith('late-session');
   });
 });

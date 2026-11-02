@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { toCommandError } from '../shared/command-error';
 import type { TCommandError } from '../shared/command-error-contract';
@@ -15,7 +15,7 @@ import { tauriSessionsGateway, type TSessionsGateway } from './sessions-gateway'
 export type TSessionEnd = Exclude<TSessionEvent, { type: 'output' }>;
 
 export type TConnectionState =
-  | { readonly status: 'idle'; readonly lastRequest?: TOpenSessionRequest }
+  | { readonly status: 'idle'; readonly request: TOpenSessionRequest }
   | { readonly status: 'connecting'; readonly request: TOpenSessionRequest }
   | {
       readonly status: 'confirmingHostKey';
@@ -45,12 +45,31 @@ type TConnectionGateways = {
   readonly trust?: TTrustGateway;
 };
 
-/** One terminal connection: opening it, the server key decision, its output and its end. */
-export function useConnection({
-  sessions = tauriSessionsGateway,
-  trust = tauriTrustGateway,
-}: TConnectionGateways = {}) {
-  const [state, setState] = useState<TConnectionState>({ status: 'idle' });
+/**
+ * One terminal connection: opening it, the server key decision, its output and its end.
+ * The session closes when the component using this hook unmounts (its tab closes).
+ */
+export function useConnection(
+  initialRequest: TOpenSessionRequest,
+  { sessions = tauriSessionsGateway, trust = tauriTrustGateway }: TConnectionGateways = {},
+) {
+  const [state, setState] = useState<TConnectionState>({
+    status: 'idle',
+    request: initialRequest,
+  });
+  const openSessionId = useRef<string | undefined>(undefined);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+      if (openSessionId.current) {
+        void sessions.closeSession(openSessionId.current).catch(() => undefined);
+        openSessionId.current = undefined;
+      }
+    };
+  }, [sessions]);
 
   const connect = useCallback(
     async (request: TOpenSessionRequest) => {
@@ -65,12 +84,19 @@ export function useConnection({
           return;
         }
         progress.hasEnded = true;
+        openSessionId.current = undefined;
         setState({ status: 'ended', request, end: event });
       };
 
       try {
         const sessionId = await sessions.openSession(request, onEvent);
+        if (!isMounted.current) {
+          // The tab closed while connecting: nobody will use this session.
+          void sessions.closeSession(sessionId).catch(() => undefined);
+          return;
+        }
         if (!progress.hasEnded) {
+          openSessionId.current = sessionId;
           setState({ status: 'connected', request, sessionId, output });
         }
       } catch (rejection: unknown) {
@@ -102,20 +128,10 @@ export function useConnection({
     await connect(request);
   }, [connect, state, trust]);
 
-  const backToForm = useCallback(() => {
-    setState((current) =>
-      current.status === 'idle' ? current : { status: 'idle', lastRequest: current.request },
-    );
+  /** Leaves a pending decision or failure without connecting. */
+  const dismiss = useCallback(() => {
+    setState((current) => ({ status: 'idle', request: current.request }));
   }, []);
-
-  const closeSession = useCallback(async () => {
-    if (state.status !== 'connected') {
-      return;
-    }
-    const { request, sessionId } = state;
-    setState({ status: 'idle', lastRequest: request });
-    await sessions.closeSession(sessionId).catch(() => undefined);
-  }, [sessions, state]);
 
   const sessionId = state.status === 'connected' ? state.sessionId : undefined;
 
@@ -140,5 +156,5 @@ export function useConnection({
     [sessionId, sessions],
   );
 
-  return { state, connect, trustHostKeyAndConnect, backToForm, closeSession, sendInput, resize };
+  return { state, connect, trustHostKeyAndConnect, dismiss, sendInput, resize };
 }
