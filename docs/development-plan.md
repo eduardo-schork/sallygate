@@ -7,7 +7,7 @@ The step-by-step plan for building Sallygate, and the place where progress is tr
 ## Current focus
 
 - **Stage:** 0 — Foundation
-- **Next task:** push `develop` and set it as the default branch on GitHub
+- **Next task:** Stage 1, local `openssh-server` test container
 - **Blocked on:** nothing
 
 Update this block whenever the focus moves.
@@ -17,47 +17,54 @@ Update this block whenever the focus moves.
 ## Stage 0 — Foundation
 
 **Goal:** a repo, toolchain and empty app that build and run, so every later stage only adds features.
-**Branch:** `feature/foundation` (from `develop`)
-**Done when:** `cargo tauri dev` opens an empty Sallygate window styled with faber-ui, and CI is green on `develop`.
+**Branch:** `develop`
+**Done when:** `bun run tauri dev` opens an empty Sallygate window styled with faber-ui, and every local check passes.
 
 - [x] Project folder, git repo and GitHub remote
 - [x] README, `.gitignore`, agent instructions, project brief
 - [x] Docs structure: architecture, decisions, roadmap, security, glossary, this plan
 - [x] `develop` branch created locally
+- [x] Architecture style and code conventions decided (ADR-0009, ADR-0010, [conventions.md](conventions.md))
 - [ ] Push `develop`; make it the default branch on GitHub
-- [ ] Install toolchain: `rustup` (stable), Tauri CLI, Node + package manager (decide which; faber-ui uses Bun)
-- [ ] Scaffold the Tauri 2 app (React + TypeScript + Vite template)
-- [ ] Add faber-ui (theme provider, global styles, fonts) and render one faber-ui screen
-- [ ] Set version `0.1.0-dev` in `Cargo.toml`, `package.json` and `tauri.conf.json`
-- [ ] Lint and format: `rustfmt`, `clippy`, ESLint, Prettier
-- [ ] CI on GitHub Actions: build, lint and test on every PR to `develop`
+- [x] Install toolchain: `rustup` (stable, via Homebrew), Bun; the Tauri CLI is a dev dependency (`@tauri-apps/cli`)
+- [x] Scaffold the Tauri 2 app (React + TypeScript + Vite)
+- [x] Cargo workspace with the layer crates: `sallygate-domain`, `sallygate-application`, `sallygate-infrastructure`, and the `sallygate` app in `src-tauri/`
+- [-] Empty context modules and UI layer folders: dropped as empty scaffolding; each context's modules and folders are created with its first real code (Stage 1 `sessions`, `trust`)
+- [x] Add faber-ui (`styles.css`, `GlobalStyles`, dark theme) and render one faber-ui screen (`src/app/`)
+- [x] Version `0.1.0-dev` in the workspace `Cargo.toml` and `package.json`; `tauri.conf.json` reads it from Cargo
+- [x] Rust quality gates: `rustfmt`, Clippy with `-D warnings` + `pedantic` + `unwrap_used`/`expect_used`/`panic` denied, `unsafe_code` forbidden (workspace lints)
+- [x] TypeScript quality gates: ESLint strict type-checked, Prettier, faber-ui's kebab-case and no-hard-coded-design-values rules, and layer-boundary import rules
+- [x] Architecture check: `bun run check:architecture` fails if a crate gains a dependency that breaks the dependency rule
+- [-] CI on GitHub Actions: deferred by the owner; local checks are the gate for now
 - [ ] Reserve the `sallygate` crate name on crates.io
 
 ## Stage 1 — Rust SSH spike (0.1.0, part A)
 
 **Goal:** prove that the Rust core can hold a real SSH session and that its output reaches the terminal in the UI. This is also the Rust learning stage.
-**Branch:** `feature/ssh-spike`
+**Branch:** `develop`
 **Done when:** the app opens a working, resizable interactive shell on a real server, typed into an `xterm.js` terminal.
 
 - [ ] Local test server: an `openssh-server` Docker container with a test user and key
-- [ ] CLI-only Rust binary: connect with `russh`, authenticate with a key file, run `uname -a`, print the output
-- [ ] Interactive PTY: open a shell channel, forward stdin/stdout in the CLI
-- [ ] Host key check against `~/.ssh/known_hosts`; refuse changed keys
-- [ ] Move the session code into the Tauri core as a `session` module
-- [ ] Tauri commands `open_session`, `session_write`, `session_resize`, `session_close` and the `session_output` event
+- [ ] Throwaway spike in `spikes/ssh-cli/` (not part of the layers): connect with `russh`, authenticate with a key file, run `uname -a`, then an interactive PTY over stdin/stdout. Record what we learned in the progress log, then delete it.
+- [ ] Decide the async-port approach and the UI type-generation tool (ADRs)
+- [ ] `sessions` domain: `SessionId`, `TerminalSize`, session states
+- [ ] `trust` domain + `known_hosts` file adapter: verify, unknown key, changed key
+- [ ] `sessions` application: `OpenSession`, `WriteToSession`, `ResizeSession`, `CloseSession` use cases; `SshConnector` and `SessionEvents` ports; tests with fakes
+- [ ] `RusshConnector` adapter with integration tests against the Docker server
+- [ ] Tauri driving adapter: `open_session`, `session_write`, `session_resize`, `session_close` commands and the `session_output` event; wiring in the composition root
 - [ ] Measure: events with base64 bytes vs a Tauri channel; record the choice as an ADR
-- [ ] `xterm.js` in a React component wired to those commands
+- [ ] UI `sessions` module: gateway port, Tauri gateway, `use-session` hook, `terminal-view` component with `xterm.js`
 - [ ] Connect to the owner's real server from the app
 
 ## Stage 2 — Hosts and tabs (0.1.0, part B)
 
 **Goal:** a usable daily SSH client for saved hosts.
-**Branch:** one `feature/*` per item group
+**Branch:** `develop`
 **Done when:** the owner uses Sallygate instead of `ssh` in the terminal for a week. Then cut `release/0.1.0`.
 
-- [ ] `hosts` module: `Host` and `Group` model, `hosts.json` load/save with validation
-- [ ] `secrets` module: passwords and passphrases in the keychain via `keyring`
-- [ ] `auth` module: key file, password and ssh-agent
+- [ ] `inventory` domain: `Host`, `Group` and their value objects; application: `SaveHost`, `ListHosts`, `DeleteHost`; `HostRepository` port; `JsonHostRepository` adapter
+- [ ] `credentials`: `SecretStore` port, `KeychainSecretStore` adapter (`keyring`); auth methods: key file, password, ssh-agent
+- [ ] UI `inventory` module: gateway, hooks, presentation
 - [ ] Hosts screen: group and host cards, search, quick connect (Termius-style layout, faber-ui)
 - [ ] Host drawer: create and edit a host
 - [ ] Window tab bar: one tab per session, close and switch
@@ -70,7 +77,7 @@ Update this block whenever the focus moves.
 **Goal:** move files without leaving the app.
 **Done when:** files go both ways between the Mac and a server by drag and drop, with progress.
 
-- [ ] `sftp` module on top of an existing session (`russh-sftp`)
+- [ ] `transfer` context: domain, use cases, `SftpClient` port, `russh-sftp` adapter on top of an existing session
 - [ ] Dual-pane browser: local and remote, path bar, file list
 - [ ] Upload and download with a transfer queue and progress events
 - [ ] Create, rename and delete files and folders
@@ -99,6 +106,8 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-02** — Foundation on `develop`: Tauri 2 + React app with a faber-ui empty state, layer crates, strict Rust and TS lint, layer-boundary checks (both proven to reject a violation). Typecheck, lint, format, tests, UI build and Clippy pass locally; `tauri dev` opens the window. For now: commit straight to `develop` with Conventional Commits, no CI (local checks are the gate).
+- **2026-11-02** — Code architecture set: DDD + Clean + Ports and Adapters, one crate per layer (ADR-0009); UI follows faber-ui conventions (ADR-0010); [conventions.md](conventions.md) added; plan reworked around contexts and layers.
 - **2026-11-02** — Docs structure created (architecture, ADRs 0001–0008, roadmap, security, glossary, this plan).
 - **2026-11-02** — `develop` branch created locally; SemVer and Gitflow adopted (ADR-0007).
 - **2026-11-02** — Repo created at github.com/eduardo-schork/sallygate; first commit on `main`.
