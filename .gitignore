@@ -1,0 +1,25 @@
+# Local-only project notes
+CLAUDE.md
+PROJECT.md
+
+# Rust
+/target/
+**/target/
+
+# Node
+node_modules/
+dist/
+
+# Tauri
+src-tauri/gen/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Local secrets, never commit
+.env
+.env.*
+!.env.example
