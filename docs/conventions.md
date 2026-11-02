@@ -35,7 +35,7 @@ How we write code inside the structure described in [architecture.md](architectu
 - `rustfmt` with the default style.
 - Constructors that can fail return `Result` (`HostAddress::parse`); constructors that cannot are `new`.
 - Domain types do not derive `Serialize`/`Deserialize`. Serialization DTOs live in the infrastructure adapter or the app layer and map to domain types.
-- Async code uses `tokio`. Ports that need async use the approach chosen in the open question in [architecture.md](architecture.md).
+- Async code uses `tokio`. Async ports are `#[async_trait]` traits used as `Arc<dyn Port>` ([ADR-0012](decisions/0012-async-ports-with-async-trait.md)); a sync trait method that a library forces to look async returns `std::future::ready(…)`.
 - Logs use `tracing`, never print secrets, addresses with credentials or terminal contents ([security.md](security.md)).
 
 ## TypeScript and React

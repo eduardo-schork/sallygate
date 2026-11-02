@@ -6,9 +6,10 @@ The step-by-step plan for building Sallygate, and the place where progress is tr
 
 ## Current focus
 
-- **Stage:** 0 — Foundation
-- **Next task:** Stage 1, manual end-to-end check in the app window (test server, then the owner's server)
-- **Blocked on:** nothing
+- **Stage:** 1 — SSH terminal (built; waiting on the manual check)
+- **Next task:** the owner tests the app window against the test server, then their own server
+- **Then:** Stage 2, starting with the `inventory` domain (`Host`, `Group`)
+- **Blocked on:** the owner's manual check
 
 Update this block whenever the focus moves.
 
@@ -16,7 +17,7 @@ Update this block whenever the focus moves.
 
 ## Stage 0 — Foundation
 
-**Goal:** a repo, toolchain and empty app that build and run, so every later stage only adds features.
+**Goal:** a repo, toolchain and empty app that build and run, so every later stage only adds features. Done, except two owner tasks below.
 **Branch:** `develop`
 **Done when:** `bun run tauri dev` opens an empty Sallygate window styled with faber-ui, and every local check passes.
 
@@ -38,9 +39,9 @@ Update this block whenever the focus moves.
 - [-] CI on GitHub Actions: deferred by the owner; local checks are the gate for now
 - [ ] Reserve the `sallygate` crate name on crates.io
 
-## Stage 1 — Rust SSH spike (0.1.0, part A)
+## Stage 1 — SSH terminal (0.1.0, part A)
 
-**Goal:** prove that the Rust core can hold a real SSH session and that its output reaches the terminal in the UI. This is also the Rust learning stage.
+**Goal:** the Rust core holds a real SSH session and its output reaches a terminal in the app. This is also the Rust learning stage.
 **Branch:** `develop`
 **Done when:** the app opens a working, resizable interactive shell on a real server, typed into an `xterm.js` terminal.
 

@@ -20,13 +20,16 @@
 - **Port**: an interface the application layer needs from the outside world (`HostRepository`, `SshConnector`).
 - **Adapter**: an implementation of a port for one technology (`JsonHostRepository`, `RusshConnector`), or a driver of use cases (Tauri commands).
 - **Composition root**: the one place that builds the concrete adapters and hands them to the use cases.
-- **Gateway** (UI): a context's `*-gateway.ts`, the only UI code that calls the Rust core through Tauri (`invoke()`, `listen()`).
+- **Gateway** (UI): a context's `*-gateway.ts`, the only UI code that calls the Rust core through Tauri.
+- **Contract**: the DTOs exchanged between the UI and the core. Defined in Rust, generated into `*-contract.ts` files with `ts-rs`.
+- **Channel** (Tauri): a one-way stream from the core to the UI. Each session gets its own for output and its end.
 
 ## Project
 
 - **Host**: a saved server entry (label, address, port, username, auth method, group, tags). Part of `inventory`.
 - **Group**: a named folder of hosts. Part of `inventory`.
-- **Session**: one live SSH connection shown in a tab. Part of `sessions`.
+- **Session**: one live SSH connection with a shell, shown as a terminal. Part of `sessions`.
+- **Endpoint**: where to connect and as whom, `username@address:port` (`SshEndpoint`).
 - **Host key**: a server's public key, verified by `trust` against known hosts.
 - **Core**: the Rust side of the app. Owns connections and secrets.
 - **Vault**: the planned encrypted store for secrets, behind a master password (1.0.0).
