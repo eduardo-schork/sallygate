@@ -1,0 +1,35 @@
+[workspace]
+resolver = "3"
+members = [
+  "crates/domain",
+  "crates/application",
+  "crates/infrastructure",
+  "src-tauri",
+]
+
+[workspace.package]
+version = "0.1.0-dev"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/eduardo-schork/sallygate"
+
+[workspace.dependencies]
+sallygate-domain = { path = "crates/domain" }
+sallygate-application = { path = "crates/application" }
+sallygate-infrastructure = { path = "crates/infrastructure" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true

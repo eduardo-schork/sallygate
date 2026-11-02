@@ -1,0 +1,24 @@
+[package]
+name = "sallygate"
+description = "Sallygate desktop app: Tauri driving adapters and the composition root."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+# A lib name different from the bin name avoids a Windows build clash (rust-lang/cargo#8519).
+name = "sallygate_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+sallygate-domain.workspace = true
+sallygate-application.workspace = true
+sallygate-infrastructure.workspace = true
+tauri = { version = "2", features = [] }
+
+[lints]
+workspace = true

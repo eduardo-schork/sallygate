@@ -1,0 +1,12 @@
+[package]
+name = "sallygate-domain"
+description = "Sallygate domain layer: entities, value objects and rules. No I/O."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

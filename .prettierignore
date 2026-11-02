@@ -1,0 +1,8 @@
+bun.lock
+node_modules/
+dist/
+target/
+src-tauri/gen/
+src-tauri/icons/
+CLAUDE.md
+PROJECT.md

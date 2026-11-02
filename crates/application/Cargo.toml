@@ -1,0 +1,13 @@
+[package]
+name = "sallygate-application"
+description = "Sallygate application layer: use cases and the ports they need."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+sallygate-domain.workspace = true
+
+[lints]
+workspace = true
