@@ -7,7 +7,7 @@ The step-by-step plan for building Sallygate, and the place where progress is tr
 ## Current focus
 
 - **Stage:** 0 — Foundation
-- **Next task:** Stage 1, Tauri commands, session channel and composition root
+- **Next task:** Stage 1, manual end-to-end check in the app window (test server, then the owner's server)
 - **Blocked on:** nothing
 
 Update this block whenever the focus moves.
@@ -51,10 +51,10 @@ Update this block whenever the focus moves.
 - [x] `trust`: `KnownHosts` port, `TrustHostKey` use case, `KnownHostsFile` adapter (unknown, trusted, changed)
 - [x] `sessions` application: `OpenSession`, `WriteToSession`, `ResizeSession`, `CloseSession`; `SshConnector`, `LiveSession` and `SessionOutput` ports; `SessionRegistry`; tests with fakes
 - [x] `RusshConnector` adapter with 8 integration tests against the Docker server (`bun run test:integration`)
-- [ ] Tauri driving adapter: `open_session`, `session_write`, `session_resize`, `session_close` commands and the `session_output` event; wiring in the composition root
-- [ ] Measure: events with base64 bytes vs a Tauri channel; record the choice as an ADR
-- [ ] UI `sessions` context in `src/presentation/ui/sessions/`: `sessions-gateway.ts`, `use-session` hook, `terminal-view` component with `xterm.js`
-- [ ] Connect to the owner's real server from the app
+- [x] Tauri driving adapter: `open_session` (with a per-session `Channel`), `write_to_session`, `resize_session`, `close_session`, `trust_host_key`; DTOs generate `*-contract.ts` with `ts-rs`; composition root in `composition.rs`
+- [x] Transport decided: per-session Tauri channel with base64 output (ADR-0013); revisit only if profiling shows a need
+- [x] UI: `sessions-gateway.ts`, `trust-gateway.ts`, `use-connection` hook, connect form, unknown/changed host key dialogs, `xterm.js` terminal themed from faber-ui tokens, session bar, session-ended notice
+- [ ] Manual check in the app window: connect to the test server (trust prompt, shell, resize, close, exit), then to the owner's server
 
 ## Stage 2 — Hosts and tabs (0.1.0, part B)
 
@@ -106,6 +106,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-02** — Desktop commands and the Stage 1 UI landed: connect form, host key dialogs, `xterm.js` terminal. 11 Rust tests for the contract and 28 UI tests pass; the form and error display were checked in the browser. The native window flow still needs a manual check.
 - **2026-11-02** — Sessions core done: domain values, use cases with ports, `KnownHostsFile` and `RusshConnector` adapters. 8 integration tests pass against the Docker server (unknown/changed key, shell output, resize, exit status, user close, rejected login, unreachable server). Spike deleted.
 - **2026-11-02** — Source layout reorganized by layer under `src/` (`domain`, `application`, `infrastructure`, `presentation/{desktop,ui}`); UI simplified to gateway + hooks + components per context (ADR-0011). All checks pass and the app launches from the new layout.
 - **2026-11-02** — SSH spike with `russh` 0.65 against the test server. Learned: the server key arrives in `client::Handler::check_server_key` as `russh::keys::PublicKeyOrCertificate` (fingerprint via `HashAlg::Sha256`); `russh::keys` has `check_known_hosts_path` / `learn_known_hosts_path`; a terminal is `channel_open_session` → `request_pty` → `request_shell`, resize is `window_change`, output comes from `channel.wait()` as `ChannelMsg::Data` and ends with `ExitStatus`; shells send escape codes (bracketed paste, colors) that `xterm.js` must receive as raw bytes.

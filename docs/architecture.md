@@ -108,6 +108,12 @@ Context folders are created with their first real code; empty folders are not co
 - Components (`*.ui.tsx`) talk to the core through hooks, never through a gateway or Tauri directly. Tests replace the gateway with an in-memory one.
 - File conventions follow faber-ui ([ADR-0010](decisions/0010-frontend-follows-faber-ui-conventions.md)).
 
+## Design-system gaps
+
+Things the UI needs that faber-ui does not offer yet. Each is a local stand-in until faber-ui adds it.
+
+- **Monospace font token:** the terminal uses the system monospace stack (`terminal-view.constants.ts`).
+
 ## Contract between UI and core
 
 - **Commands** for request/response: list hosts, save a host, open a session, resize a terminal, list a remote directory.
