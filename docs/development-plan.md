@@ -7,8 +7,8 @@ The step-by-step plan for building Sallygate, and the place where progress is tr
 ## Current focus
 
 - **Stage:** 2 — Hosts and tabs (hosts, editor and tabs built)
-- **Next task:** end-to-end check in the native window (needs Computer use, or the owner), then `credentials` (password, ssh-agent, keychain)
-- **Blocked on:** the native-window check for Stages 1 and 2
+- **Next task:** `credentials` (password, ssh-agent, keychain)
+- **Blocked on:** nothing; the owner still has to try their own server
 
 Update this block whenever the focus moves.
 
@@ -54,7 +54,8 @@ Update this block whenever the focus moves.
 - [x] Tauri driving adapter: `open_session` (with a per-session `Channel`), `write_to_session`, `resize_session`, `close_session`, `trust_host_key`; DTOs generate `*-contract.ts` with `ts-rs`; composition root in `composition.rs`
 - [x] Transport decided: per-session Tauri channel with base64 output (ADR-0013); revisit only if profiling shows a need
 - [x] UI: `sessions-gateway.ts`, `trust-gateway.ts`, `use-connection` hook, connect form, unknown/changed host key dialogs, `xterm.js` terminal themed from faber-ui tokens, session bar, session-ended notice
-- [ ] Manual check in the app window: connect to the test server (trust prompt, shell, resize, close, exit), then to the owner's server
+- [x] Check in the native app window against the test server: trust prompt, shell, resize, close
+- [ ] Same check against the owner's server, and ending a session with `exit` from the shell
 
 ## Stage 2 — Hosts and tabs (0.1.0, part B)
 
@@ -106,6 +107,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-02** — Native window check of Stages 1 and 2 on a debug bundle (`bun run tauri build --debug --bundles app`) against the test server: add a host to a group, connect, trust the key (fingerprint matched the container's), run commands (`sallygate-42`), resize (`stty size` 42×146 → 33×115), open a second tab with no second trust prompt, switch tabs with output kept, close both tabs (server shows no sessions left), edit and delete the host (`hosts.json` empty again). No bugs found. Not checked: `exit` from the shell, the owner's server.
 - **2026-11-02** — Stage 2, first part: saved hosts (domain, use cases, `hosts.json`, commands), hosts screen, host drawer and session tabs. `bun run check:full` passes (46 UI tests, Rust unit and integration tests). Checked in the browser pane with an in-memory core: add, list, connect (opens a tab), close tab, edit, delete. Fixed there: card lost its faber-ui styles (`as` vs `forwardedAs`), clipped New host button, drawer title flipping while closing. The native-window check is still pending: Computer use is not enabled in this session.
 - **2026-11-02** — Desktop commands and the Stage 1 UI landed: connect form, host key dialogs, `xterm.js` terminal. 11 Rust tests for the contract and 28 UI tests pass; the form and error display were checked in the browser. The native window flow still needs a manual check.
 - **2026-11-02** — Sessions core done: domain values, use cases with ports, `KnownHostsFile` and `RusshConnector` adapters. 8 integration tests pass against the Docker server (unknown/changed key, shell output, resize, exit status, user close, rejected login, unreachable server). Spike deleted.
