@@ -113,7 +113,9 @@ Context folders are created with their first real code; empty folders are not co
 - **Commands** for request/response: list hosts, save a host, open a session, resize a terminal, list a remote directory.
 - **Events** for streams the core pushes: terminal output, session state changes, transfer progress.
 - Every command returns `Result<TDto, TAppError>`. Errors carry a stable code and a message safe to show the user, never a secret.
-- DTOs are defined once in Rust and the TypeScript types are generated from them (open question below), so the two sides cannot drift.
+- Each session streams its output and lifecycle events through its own Tauri `Channel`, opened by `open_session` ([ADR-0013](decisions/0013-ui-contract-channels-and-generated-types.md)).
+- DTOs are defined once in Rust (desktop crate) and `ts-rs` generates a `*-contract.ts` per context in the UI, so the two sides cannot drift.
+- Ports are `async-trait` traits behind `Arc<dyn …>` ([ADR-0012](decisions/0012-async-ports-with-async-trait.md)).
 
 ## Data flow: opening a terminal
 
@@ -121,7 +123,7 @@ Context folders are created with their first real code; empty folders are not co
 2. The gateway invokes the Tauri command `open_session(host_id, cols, rows)`.
 3. `presentation/desktop` handles the command and calls the `OpenSession` use case.
 4. `OpenSession` loads the host (`HostRepository` port), asks `credentials` for auth material, and connects through the `SshConnector` port.
-5. The `russh` adapter connects to the remote server (e.g. the owner's VPS); `trust` verifies the server key. Unknown or changed key → the `SessionEvents` port emits `host_key_prompt` and the use case waits for the user's decision.
+5. The `russh` adapter connects to the remote server (e.g. the owner's VPS) and checks the server key through the `KnownHosts` port. Unknown or changed key → the session is not opened and the error carries the key; the UI asks the user, and on trust calls `trust_host_key` and opens again ([ADR-0014](decisions/0014-confirm-unknown-host-keys-before-connecting.md)).
 6. On success the use case returns a `SessionId`; output flows through `SessionEvents` as `session_output { session_id, bytes }`.
 7. Keystrokes go back through `session_write`, size changes through `session_resize`, and closing the tab calls `session_close`.
 
@@ -153,8 +155,5 @@ Value objects (`HostAddress`, `Port`, `Username`…) validate on creation, so an
 
 ## Open questions
 
-- Terminal output: base64 bytes in events, or a Tauri channel for binary streams? Measure during the spike.
-- Type generation for the UI contract: `tauri-specta`, `ts-rs`, or hand-written types checked by tests?
-- Async ports: native `async fn` in traits with generics, or `async-trait` for `dyn` ports?
 - One SSH connection shared by the terminal and SFTP tabs of the same host, or one per tab?
 - Reconnect policy: automatic with backoff, or ask the user?
