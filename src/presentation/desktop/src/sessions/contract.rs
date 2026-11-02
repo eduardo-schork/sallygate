@@ -5,7 +5,7 @@ use ts_rs::TS;
 use crate::command_error::CommandError;
 
 /// Where to connect and as whom, as typed by the user.
-#[derive(Debug, Clone, Deserialize, TS)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(
     rename = "TEndpoint",
@@ -16,6 +16,16 @@ pub struct EndpointDto {
     pub address: String,
     pub port: u16,
     pub username: String,
+}
+
+impl From<&SshEndpoint> for EndpointDto {
+    fn from(endpoint: &SshEndpoint) -> Self {
+        Self {
+            address: endpoint.address().to_string(),
+            port: endpoint.port().value(),
+            username: endpoint.username().to_string(),
+        }
+    }
 }
 
 impl EndpointDto {

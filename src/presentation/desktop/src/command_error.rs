@@ -37,6 +37,7 @@ pub enum CommandErrorKind {
     Unreachable,
     ConnectionFailed,
     KnownHostsUnavailable,
+    HostStoreUnavailable,
     SessionNotFound,
     SessionFailed,
 }

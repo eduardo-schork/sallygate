@@ -3,6 +3,7 @@
 
 mod command_error;
 mod composition;
+mod inventory;
 mod sessions;
 mod trust;
 
@@ -16,10 +17,13 @@ use tauri::Manager;
 pub fn run() -> tauri::Result<()> {
     tauri::Builder::default()
         .setup(|app| {
-            app.manage(composition::compose()?);
+            app.manage(composition::compose(&app.path().app_data_dir()?)?);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            inventory::commands::list_hosts,
+            inventory::commands::save_host,
+            inventory::commands::delete_host,
             sessions::commands::open_session,
             sessions::commands::write_to_session,
             sessions::commands::resize_session,

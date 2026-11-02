@@ -36,6 +36,10 @@ export const CONNECTION_ERROR_COPY: Record<TCommandErrorKind, TErrorCopy> = {
     title: 'Could not use ~/.ssh/known_hosts',
     hint: 'Check that the file can be read and written.',
   },
+  hostStoreUnavailable: {
+    title: 'Could not use the saved hosts',
+    hint: 'Sallygate keeps them in its data folder; check that it can be read and written.',
+  },
   sessionNotFound: {
     title: 'The session is no longer open',
     hint: 'Connect again to open a new one.',

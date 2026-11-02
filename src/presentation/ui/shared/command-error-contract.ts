@@ -14,4 +14,4 @@ message: string,
  */
 hostKey?: THostKey, };
 
-export type TCommandErrorKind = "invalidInput" | "unknownHostKey" | "hostKeyChanged" | "authenticationRejected" | "keyFileUnreadable" | "unreachable" | "connectionFailed" | "knownHostsUnavailable" | "sessionNotFound" | "sessionFailed";
+export type TCommandErrorKind = "invalidInput" | "unknownHostKey" | "hostKeyChanged" | "authenticationRejected" | "keyFileUnreadable" | "unreachable" | "connectionFailed" | "knownHostsUnavailable" | "hostStoreUnavailable" | "sessionNotFound" | "sessionFailed";

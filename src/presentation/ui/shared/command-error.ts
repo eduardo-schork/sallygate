@@ -1,17 +1,19 @@
 import type { TCommandError, TCommandErrorKind } from './command-error-contract';
 
-const COMMAND_ERROR_KINDS = new Set<string>([
-  'invalidInput',
-  'unknownHostKey',
-  'hostKeyChanged',
-  'authenticationRejected',
-  'keyFileUnreadable',
-  'unreachable',
-  'connectionFailed',
-  'knownHostsUnavailable',
-  'sessionNotFound',
-  'sessionFailed',
-] satisfies TCommandErrorKind[]);
+// A Record, so adding a kind in Rust fails the typecheck here until it is listed.
+const COMMAND_ERROR_KINDS: Record<TCommandErrorKind, true> = {
+  invalidInput: true,
+  unknownHostKey: true,
+  hostKeyChanged: true,
+  authenticationRejected: true,
+  keyFileUnreadable: true,
+  unreachable: true,
+  connectionFailed: true,
+  knownHostsUnavailable: true,
+  hostStoreUnavailable: true,
+  sessionNotFound: true,
+  sessionFailed: true,
+};
 
 /** Tauri rejects a failed command with the Rust `CommandError`; anything else is unexpected. */
 export function isCommandError(value: unknown): value is TCommandError {
@@ -20,7 +22,7 @@ export function isCommandError(value: unknown): value is TCommandError {
     value !== null &&
     'kind' in value &&
     typeof value.kind === 'string' &&
-    COMMAND_ERROR_KINDS.has(value.kind) &&
+    Object.hasOwn(COMMAND_ERROR_KINDS, value.kind) &&
     'message' in value &&
     typeof value.message === 'string'
   );

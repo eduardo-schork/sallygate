@@ -15,4 +15,14 @@ pub enum InventoryError {
     EmptyUsername,
     #[error("the username \"{0}\" contains whitespace")]
     UsernameWithWhitespace(String),
+    #[error("\"{0}\" is not a host id")]
+    InvalidHostId(String),
+    #[error("the host name is empty")]
+    EmptyHostLabel,
+    #[error("the host name is longer than {max} characters")]
+    HostLabelTooLong { max: usize },
+    #[error("the group name is empty")]
+    EmptyGroupName,
+    #[error("the group name is longer than {max} characters")]
+    GroupNameTooLong { max: usize },
 }

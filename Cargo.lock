@@ -3535,6 +3535,8 @@ dependencies = [
  "russh",
  "sallygate-application",
  "sallygate-domain",
+ "serde",
+ "serde_json",
  "tempfile",
  "tokio",
 ]
