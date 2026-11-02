@@ -15,7 +15,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "test:rust": "cargo test --workspace"
+    "test:rust": "cargo test --workspace",
+    "test:integration": "cargo test --workspace -- --ignored"
   },
   "dependencies": {
     "@faber-ui/react": "^0.4.0",
