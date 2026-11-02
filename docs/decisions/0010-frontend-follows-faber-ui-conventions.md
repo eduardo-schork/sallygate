@@ -1,6 +1,6 @@
 # ADR-0010: The UI follows faber-ui's code conventions
 
-- **Status:** Accepted
+- **Status:** Accepted; UI layering superseded by [ADR-0011](0011-layer-first-source-layout.md)
 - **Date:** 2026-11-02
 
 ## Context

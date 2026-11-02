@@ -2,7 +2,7 @@ bun.lock
 node_modules/
 dist/
 target/
-src-tauri/gen/
-src-tauri/icons/
+src/presentation/desktop/gen/
+src/presentation/desktop/icons/
 CLAUDE.md
 PROJECT.md

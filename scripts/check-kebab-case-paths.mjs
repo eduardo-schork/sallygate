@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { findKebabCasePathViolations } from '../eslint-rules/kebab-case-paths.js';
 
 // Rust code follows snake_case, so only the TypeScript side is checked.
-const KEBAB_CASE_ROOTS = ['src/', 'scripts/', 'eslint-rules/'];
+const KEBAB_CASE_ROOTS = ['src/presentation/ui/', 'scripts/', 'eslint-rules/'];
 
 const gitOutput = execFileSync(
   'git',

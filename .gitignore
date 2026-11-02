@@ -11,7 +11,7 @@ node_modules/
 dist/
 
 # Tauri
-src-tauri/gen/
+src/presentation/desktop/gen/
 
 # OS / editor
 .DS_Store

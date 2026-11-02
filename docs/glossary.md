@@ -20,7 +20,7 @@
 - **Port**: an interface the application layer needs from the outside world (`HostRepository`, `SshConnector`).
 - **Adapter**: an implementation of a port for one technology (`JsonHostRepository`, `RusshConnector`), or a driver of use cases (Tauri commands).
 - **Composition root**: the one place that builds the concrete adapters and hands them to the use cases.
-- **Gateway** (UI): the UI-side port to the core; its Tauri implementation is the only code that calls `invoke()`.
+- **Gateway** (UI): a context's `*-gateway.ts`, the only UI code that calls the Rust core through Tauri (`invoke()`, `listen()`).
 
 ## Project
 

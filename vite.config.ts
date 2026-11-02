@@ -16,11 +16,20 @@ export default defineConfig({
     strictPort: true,
     host: tauriDevHost ?? false,
     ...(tauriDevHost ? { hmr: { protocol: 'ws', host: tauriDevHost, port: 1421 } } : {}),
-    watch: { ignored: ['**/src-tauri/**', '**/crates/**', '**/target/**'] },
+    // Rust layers are rebuilt by `tauri dev`, not by Vite.
+    watch: {
+      ignored: [
+        '**/src/domain/**',
+        '**/src/application/**',
+        '**/src/infrastructure/**',
+        '**/src/presentation/desktop/**',
+        '**/target/**',
+      ],
+    },
   },
   test: {
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}', 'eslint-rules/**/*.test.js'],
+    include: ['src/presentation/ui/**/*.test.{ts,tsx}', 'eslint-rules/**/*.test.js'],
   },
 });

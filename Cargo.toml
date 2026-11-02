@@ -1,10 +1,10 @@
 [workspace]
 resolver = "3"
 members = [
-  "crates/domain",
-  "crates/application",
-  "crates/infrastructure",
-  "src-tauri",
+  "src/domain",
+  "src/application",
+  "src/infrastructure",
+  "src/presentation/desktop",
 ]
 
 [workspace.package]
@@ -14,9 +14,9 @@ license = "MIT"
 repository = "https://github.com/eduardo-schork/sallygate"
 
 [workspace.dependencies]
-sallygate-domain = { path = "crates/domain" }
-sallygate-application = { path = "crates/application" }
-sallygate-infrastructure = { path = "crates/infrastructure" }
+sallygate-domain = { path = "src/domain" }
+sallygate-application = { path = "src/application" }
+sallygate-infrastructure = { path = "src/infrastructure" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

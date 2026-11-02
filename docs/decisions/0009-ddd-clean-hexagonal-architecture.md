@@ -1,6 +1,6 @@
 # ADR-0009: DDD with Clean Architecture and Ports and Adapters
 
-- **Status:** Accepted
+- **Status:** Accepted; code layout superseded by [ADR-0011](0011-layer-first-source-layout.md)
 - **Date:** 2026-11-02
 
 ## Context

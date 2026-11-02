@@ -1,6 +1,6 @@
 # Architecture
 
-Status: **draft**. The layers, dependency rule and runtime boundaries are decided ([ADR-0002](decisions/0002-tauri-rust-react-stack.md), [ADR-0009](decisions/0009-ddd-clean-hexagonal-architecture.md), [ADR-0010](decisions/0010-frontend-follows-faber-ui-conventions.md)). The command contract and data model are proposals to settle during the v0.1 spike. How to write the code inside this structure is in [conventions.md](conventions.md).
+Status: **draft**. The layers, dependency rule and runtime boundaries are decided ([ADR-0002](decisions/0002-tauri-rust-react-stack.md), [ADR-0009](decisions/0009-ddd-clean-hexagonal-architecture.md), [ADR-0010](decisions/0010-frontend-follows-faber-ui-conventions.md), [ADR-0011](decisions/0011-layer-first-source-layout.md)). The command contract and data model are proposals to settle during the v0.1 spike. How to write the code inside this structure is in [conventions.md](conventions.md).
 
 ## Runtime view
 
@@ -25,27 +25,27 @@ Status: **draft**. The layers, dependency rule and runtime boundaries are decide
 ## Style: DDD + Clean Architecture + Ports and Adapters
 
 - **Domain-driven:** the code is split by bounded context (below), and each context speaks the language in [glossary.md](glossary.md).
-- **Clean layers:** each context has domain, application and infrastructure code; the Tauri app is the outermost layer.
-- **Ports and adapters:** the application layer declares _ports_ (Rust traits, TypeScript types) for everything outside it (storage, SSH, keychain, clock, UI events). _Adapters_ in the infrastructure layer implement them. Use cases never know which adapter they get.
+- **Clean layers:** the code has four layers: domain, application, infrastructure and presentation. Each one is a folder under `src/`, and inside each layer there is one folder per context.
+- **Ports and adapters:** the application layer declares _ports_ (Rust traits) for everything outside it (storage, SSH, keychain, clock, events to the UI). _Adapters_ in the infrastructure layer implement them. Use cases never know which adapter they get.
 
 ### Dependency rule
 
 Dependencies point inward only. Inner layers never import outer ones.
 
 ```
- presentation / tauri app  ──►  infrastructure  ──►  application  ──►  domain
-        (driving adapters,        (driven adapters:      (use cases,        (entities, value
-         composition root)         russh, keyring, fs)     ports)             objects, rules)
+ presentation  ──►  infrastructure  ──►  application  ──►  domain
+ (desktop app,      (adapters: russh,     (use cases,        (entities, value
+  UI)                keyring, files)       ports)             objects, rules)
 ```
 
-| Layer              | Contains                                                                                        | May depend on                                             | Must not contain                                            |
-| ------------------ | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------- |
-| **domain**         | Entities, value objects, domain errors, pure domain rules                                       | Standard library, small pure crates (`uuid`, `thiserror`) | I/O, async runtime, serialization, framework types          |
-| **application**    | Use cases (one per user intent), ports (traits), application errors, DTOs crossing the boundary | domain                                                    | Concrete libraries for SSH, storage, keychain or UI         |
-| **infrastructure** | Adapters implementing ports: `russh`, `russh-sftp`, `keyring`, JSON files, `~/.ssh` parsing     | application, domain, external crates                      | Business rules                                              |
-| **app** (Tauri)    | Tauri commands and events (driving adapters), dependency wiring (composition root), app config  | everything                                                | Business rules, direct library calls that bypass a use case |
+| Layer              | Contains                                                                                         | May depend on                                             | Must not contain                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------- | ----------------------------------------------------------- |
+| **domain**         | Entities, value objects, domain errors, pure domain rules                                        | Standard library, small pure crates (`uuid`, `thiserror`) | I/O, async runtime, serialization, framework types          |
+| **application**    | Use cases (one per user intent), ports (traits), application errors, DTOs crossing the boundary  | domain                                                    | Concrete libraries for SSH, storage, keychain or UI         |
+| **infrastructure** | Adapters implementing ports: `russh`, `russh-sftp`, `keyring`, JSON files, `~/.ssh` parsing      | application, domain, external crates                      | Business rules                                              |
+| **presentation**   | `desktop`: Tauri commands and events, the composition root. `ui`: React screens, hooks, gateways | everything                                                | Business rules, direct library calls that bypass a use case |
 
-The rule is enforced by the compiler: each layer is its own crate, and a crate can only use what its `Cargo.toml` lists.
+The rule is enforced by the compiler (each Rust layer is its own crate and can only use what its `Cargo.toml` lists), by `bun run check:architecture`, and by ESLint for the UI.
 
 ## Bounded contexts
 
@@ -61,52 +61,52 @@ The rule is enforced by the compiler: each layer is its own crate, and a crate c
 
 Contexts talk to each other only through application-layer interfaces (a use case or a port), never by reaching into another context's domain internals.
 
-## Code layout (Rust)
+## Code layout
 
-A Cargo workspace with one crate per layer and one module per context inside each crate:
-
-```
-crates/
-  domain/            sallygate-domain
-    src/inventory/   host.rs, group.rs, host_address.rs, port.rs, ...
-    src/sessions/
-    src/trust/
-    src/credentials/
-  application/       sallygate-application
-    src/inventory/   use cases (save_host.rs, list_hosts.rs), ports (host_repository.rs)
-    src/sessions/    open_session.rs, ports (ssh_connector.rs, session_events.rs)
-    ...
-  infrastructure/    sallygate-infrastructure
-    src/inventory/   json_host_repository.rs, ssh_config_importer.rs
-    src/sessions/    russh_connector.rs
-    src/trust/       known_hosts_file.rs
-    src/credentials/ keychain_secret_store.rs
-src-tauri/           sallygate (the app)
-  src/commands/      one file per context: thin handlers that call use cases
-  src/events/        maps port events to Tauri events
-  src/composition.rs builds adapters and use cases (the only place that knows concrete types)
-```
-
-## Code layout (UI)
-
-The UI follows the same contexts and layers, with faber-ui's file conventions ([ADR-0010](decisions/0010-frontend-follows-faber-ui-conventions.md)):
+Everything lives under `src/`, one folder per layer, read from the inside out ([ADR-0011](decisions/0011-layer-first-source-layout.md)):
 
 ```
 src/
-  app/                       app shell: providers, theme, routing, composition root
-  modules/
-    inventory/
-      domain/                types and pure rules for the UI (no React, no Tauri)
-      application/           ports (TInventoryGateway) and use-case hooks (use-hosts.ts)
-      infrastructure/        tauri-inventory-gateway.ts: the only code that calls invoke()
-      presentation/          components: host-card/host-card.ui.tsx, .styles.ts, .types.ts, index.ts
-    sessions/
-    trust/
-    ...
-  shared/                    cross-context building blocks with no domain knowledge
+├── domain/                  Rust crate sallygate-domain: pure rules, no I/O
+│   └── src/
+│       ├── inventory/       host.rs, group.rs, host_address.rs, port.rs …
+│       ├── sessions/        session_id.rs, terminal_size.rs …
+│       ├── trust/           host_key.rs, fingerprint.rs …
+│       └── credentials/     auth_method.rs …
+├── application/             Rust crate sallygate-application: use cases and ports
+│   └── src/
+│       ├── inventory/       save_host.rs, list_hosts.rs, host_repository.rs (port) …
+│       └── sessions/        open_session.rs, ssh_connector.rs (port), session_events.rs (port) …
+├── infrastructure/          Rust crate sallygate-infrastructure: adapters
+│   └── src/
+│       ├── inventory/       json_host_repository.rs, ssh_config_importer.rs
+│       ├── sessions/        russh_connector.rs
+│       ├── trust/           known_hosts_file.rs
+│       └── credentials/     keychain_secret_store.rs
+└── presentation/            how the user reaches the app
+    ├── desktop/             Rust crate sallygate (Tauri): the native app
+    │   └── src/
+    │       ├── commands/    one file per context: thin handlers that call use cases
+    │       ├── events/      maps port events to Tauri events
+    │       └── composition.rs   builds adapters and use cases (the only place that knows concrete types)
+    └── ui/                  TypeScript: React + faber-ui, inside the desktop window
+        ├── app/             app shell: entry point, global styles, layout
+        ├── sessions/
+        │   ├── sessions-gateway.ts      the only file that calls invoke()/listen() for this context
+        │   ├── use-session.ts           hooks: state and actions for components
+        │   └── terminal-view/           terminal-view.ui.tsx, .styles.ts, .types.ts, index.ts
+        ├── inventory/
+        └── shared/          building blocks with no context knowledge
 ```
 
-Components never call `invoke()` or `listen()` directly; they use hooks from `application/`, which talk to a gateway port. Tests swap the Tauri gateway for an in-memory one.
+Context folders are created with their first real code; empty folders are not committed.
+
+### UI rules
+
+- The UI is a presentation layer: it shows state and sends the user's intents. Business rules live in Rust, not in TypeScript.
+- Each context has one `*-gateway.ts`, the only code allowed to import `@tauri-apps/*`.
+- Components (`*.ui.tsx`) talk to the core through hooks, never through a gateway or Tauri directly. Tests replace the gateway with an in-memory one.
+- File conventions follow faber-ui ([ADR-0010](decisions/0010-frontend-follows-faber-ui-conventions.md)).
 
 ## Contract between UI and core
 
@@ -117,11 +117,11 @@ Components never call `invoke()` or `listen()` directly; they use hooks from `ap
 
 ## Data flow: opening a terminal
 
-1. `presentation`: the user clicks _Open terminal_ on a host card; `useOpenSession()` calls the gateway.
-2. `tauri-sessions-gateway` invokes `open_session(host_id, cols, rows)`.
-3. `src-tauri` command calls the `OpenSession` use case.
+1. `presentation/ui`: the user clicks _Open terminal_ on a host card; the `useOpenSession()` hook calls `sessions-gateway.ts`.
+2. The gateway invokes the Tauri command `open_session(host_id, cols, rows)`.
+3. `presentation/desktop` handles the command and calls the `OpenSession` use case.
 4. `OpenSession` loads the host (`HostRepository` port), asks `credentials` for auth material, and connects through the `SshConnector` port.
-5. The `russh` adapter connects; `trust` verifies the server key. Unknown or changed key → the `SessionEvents` port emits `host_key_prompt` and the use case waits for the user's decision.
+5. The `russh` adapter connects to the remote server (e.g. the owner's VPS); `trust` verifies the server key. Unknown or changed key → the `SessionEvents` port emits `host_key_prompt` and the use case waits for the user's decision.
 6. On success the use case returns a `SessionId`; output flows through `SessionEvents` as `session_output { session_id, bytes }`.
 7. Keystrokes go back through `session_write`, size changes through `session_resize`, and closing the tab calls `session_close`.
 

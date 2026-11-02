@@ -24,5 +24,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["src", "vite.config.ts", "vitest.setup.ts"]
+  "include": ["src/presentation/ui", "vite.config.ts", "vitest.setup.ts"]
 }

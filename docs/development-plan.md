@@ -28,9 +28,9 @@ Update this block whenever the focus moves.
 - [ ] Push `develop`; make it the default branch on GitHub
 - [x] Install toolchain: `rustup` (stable, via Homebrew), Bun; the Tauri CLI is a dev dependency (`@tauri-apps/cli`)
 - [x] Scaffold the Tauri 2 app (React + TypeScript + Vite)
-- [x] Cargo workspace with the layer crates: `sallygate-domain`, `sallygate-application`, `sallygate-infrastructure`, and the `sallygate` app in `src-tauri/`
+- [x] Cargo workspace with the layer crates: `sallygate-domain`, `sallygate-application`, `sallygate-infrastructure`, and the `sallygate` app (now under `src/`, see ADR-0011)
 - [-] Empty context modules and UI layer folders: dropped as empty scaffolding; each context's modules and folders are created with its first real code (Stage 1 `sessions`, `trust`)
-- [x] Add faber-ui (`styles.css`, `GlobalStyles`, dark theme) and render one faber-ui screen (`src/app/`)
+- [x] Add faber-ui (`styles.css`, `GlobalStyles`, dark theme) and render one faber-ui screen (`src/presentation/ui/app/`)
 - [x] Version `0.1.0-dev` in the workspace `Cargo.toml` and `package.json`; `tauri.conf.json` reads it from Cargo
 - [x] Rust quality gates: `rustfmt`, Clippy with `-D warnings` + `pedantic` + `unwrap_used`/`expect_used`/`panic` denied, `unsafe_code` forbidden (workspace lints)
 - [x] TypeScript quality gates: ESLint strict type-checked, Prettier, faber-ui's kebab-case and no-hard-coded-design-values rules, and layer-boundary import rules
@@ -53,7 +53,7 @@ Update this block whenever the focus moves.
 - [ ] `RusshConnector` adapter with integration tests against the Docker server
 - [ ] Tauri driving adapter: `open_session`, `session_write`, `session_resize`, `session_close` commands and the `session_output` event; wiring in the composition root
 - [ ] Measure: events with base64 bytes vs a Tauri channel; record the choice as an ADR
-- [ ] UI `sessions` module: gateway port, Tauri gateway, `use-session` hook, `terminal-view` component with `xterm.js`
+- [ ] UI `sessions` context in `src/presentation/ui/sessions/`: `sessions-gateway.ts`, `use-session` hook, `terminal-view` component with `xterm.js`
 - [ ] Connect to the owner's real server from the app
 
 ## Stage 2 — Hosts and tabs (0.1.0, part B)
@@ -64,7 +64,7 @@ Update this block whenever the focus moves.
 
 - [ ] `inventory` domain: `Host`, `Group` and their value objects; application: `SaveHost`, `ListHosts`, `DeleteHost`; `HostRepository` port; `JsonHostRepository` adapter
 - [ ] `credentials`: `SecretStore` port, `KeychainSecretStore` adapter (`keyring`); auth methods: key file, password, ssh-agent
-- [ ] UI `inventory` module: gateway, hooks, presentation
+- [ ] UI `inventory` context: gateway, hooks, components
 - [ ] Hosts screen: group and host cards, search, quick connect (Termius-style layout, faber-ui)
 - [ ] Host drawer: create and edit a host
 - [ ] Window tab bar: one tab per session, close and switch
@@ -106,6 +106,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-02** — Source layout reorganized by layer under `src/` (`domain`, `application`, `infrastructure`, `presentation/{desktop,ui}`); UI simplified to gateway + hooks + components per context (ADR-0011). All checks pass and the app launches from the new layout.
 - **2026-11-02** — SSH spike with `russh` 0.65 against the test server. Learned: the server key arrives in `client::Handler::check_server_key` as `russh::keys::PublicKeyOrCertificate` (fingerprint via `HashAlg::Sha256`); `russh::keys` has `check_known_hosts_path` / `learn_known_hosts_path`; a terminal is `channel_open_session` → `request_pty` → `request_shell`, resize is `window_change`, output comes from `channel.wait()` as `ChannelMsg::Data` and ends with `ExitStatus`; shells send escape codes (bracketed paste, colors) that `xterm.js` must receive as raw bytes.
 - **2026-11-02** — Foundation on `develop`: Tauri 2 + React app with a faber-ui empty state, layer crates, strict Rust and TS lint, layer-boundary checks (both proven to reject a violation). Typecheck, lint, format, tests, UI build and Clippy pass locally; `tauri dev` opens the window. For now: commit straight to `develop` with Conventional Commits, no CI (local checks are the gate).
 - **2026-11-02** — Code architecture set: DDD + Clean + Ports and Adapters, one crate per layer (ADR-0009); UI follows faber-ui conventions (ADR-0010); [conventions.md](conventions.md) added; plan reworked around contexts and layers.
