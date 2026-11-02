@@ -16,7 +16,9 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:rust": "cargo test --workspace",
-    "test:integration": "cargo test --workspace -- --ignored"
+    "test:integration": "cargo test --workspace -- --ignored",
+    "check": "sh scripts/check-all.sh",
+    "check:full": "sh scripts/check-all.sh --integration"
   },
   "dependencies": {
     "@faber-ui/react": "^0.4.0",
