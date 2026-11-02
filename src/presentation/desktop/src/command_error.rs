@@ -32,6 +32,7 @@ pub enum CommandErrorKind {
     InvalidInput,
     UnknownHostKey,
     HostKeyChanged,
+    SecretRequired,
     AuthenticationRejected,
     KeyFileUnreadable,
     Unreachable,

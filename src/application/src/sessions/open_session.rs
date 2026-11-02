@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use sallygate_domain::credentials::AuthMethod;
+use sallygate_domain::credentials::{AuthMethod, Secret};
 use sallygate_domain::inventory::SshEndpoint;
 use sallygate_domain::sessions::{SessionEnd, SessionId, TerminalSize};
 
@@ -12,6 +12,7 @@ use crate::trust::KnownHosts;
 pub struct OpenSessionInput {
     pub endpoint: SshEndpoint,
     pub auth: AuthMethod,
+    pub secret: Option<Secret>,
     pub size: TerminalSize,
 }
 
@@ -60,6 +61,7 @@ impl OpenSession {
             .connect(ConnectRequest {
                 endpoint: input.endpoint,
                 auth: input.auth,
+                secret: input.secret,
                 size: input.size,
                 known_hosts: Arc::clone(&self.known_hosts),
                 output: Arc::clone(&output) as Arc<dyn SessionOutput>,

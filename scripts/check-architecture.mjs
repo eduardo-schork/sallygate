@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 // The dependency rule from docs/architecture.md: each layer may only use the
 // workspace crates and external crates listed here.
 const ALLOWED_DEPENDENCIES = {
-  'sallygate-domain': { workspace: [], external: ['thiserror', 'uuid'] },
+  'sallygate-domain': { workspace: [], external: ['thiserror', 'uuid', 'zeroize'] },
   'sallygate-application': {
     workspace: ['sallygate-domain'],
     external: ['async-trait', 'thiserror', 'uuid'],

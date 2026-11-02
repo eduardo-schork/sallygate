@@ -8,6 +8,7 @@ pub fn from_open_session_error(error: OpenSessionError) -> CommandError {
     let (kind, host_key) = match error {
         OpenSessionError::UnknownHostKey(key) => (CommandErrorKind::UnknownHostKey, Some(key)),
         OpenSessionError::HostKeyChanged(key) => (CommandErrorKind::HostKeyChanged, Some(key)),
+        OpenSessionError::SecretRequired => (CommandErrorKind::SecretRequired, None),
         OpenSessionError::AuthenticationRejected => {
             (CommandErrorKind::AuthenticationRejected, None)
         }

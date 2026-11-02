@@ -18,7 +18,7 @@ describe('HostForm', () => {
       label: 'oracle-vps',
       group: 'Cloud',
       endpoint: { address: '10.0.0.5', port: 22, username: 'ubuntu' },
-      keyFilePath: '~/.ssh/id_ed25519',
+      auth: { type: 'keyFile', path: '~/.ssh/id_ed25519' },
     });
   });
 
@@ -31,7 +31,7 @@ describe('HostForm', () => {
           id: 'host-1',
           label: 'web',
           endpoint: { address: 'web.example.com', port: 2222, username: 'deploy' },
-          keyFilePath: '~/.ssh/deploy',
+          auth: { type: 'keyFile', path: '~/.ssh/deploy' },
         }}
         onSubmit={onSubmit}
       />,

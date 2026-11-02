@@ -52,7 +52,7 @@ export function App() {
   };
 
   const connectTo = (host: THost) => {
-    openTab(host.label, createSessionRequest(host.endpoint, host.keyFilePath));
+    openTab(host.label, createSessionRequest(host.endpoint, host.auth));
   };
 
   return (

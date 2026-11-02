@@ -9,7 +9,7 @@ function host(label: string, group?: string): THost {
     id: label,
     label,
     endpoint: { address: `${label}.example.com`, port: 22, username: 'ubuntu' },
-    keyFilePath: '~/.ssh/id_ed25519',
+    auth: { type: 'keyFile', path: '~/.ssh/id_ed25519' },
     ...(group === undefined ? {} : { group }),
   };
 }

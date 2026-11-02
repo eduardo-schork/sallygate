@@ -14,13 +14,15 @@ use sallygate_application::sessions::{
     ConnectRequest, LiveSession, OpenSessionError, SessionOutput, SshConnector,
 };
 use sallygate_application::trust::KnownHosts;
-use sallygate_domain::credentials::{AuthMethod, KeyFilePath};
+use sallygate_domain::credentials::{AuthMethod, KeyFilePath, Secret};
 use sallygate_domain::inventory::{HostAddress, Port, SshEndpoint, Username};
 use sallygate_domain::sessions::{SessionEnd, TerminalSize};
 use sallygate_infrastructure::sessions::RusshConnector;
 use sallygate_infrastructure::trust::KnownHostsFile;
 
 const TEST_SERVER_PORT: u16 = 2222;
+/// Set in tests/ssh-server/Dockerfile.
+const TEST_PASSWORD: &str = "sallygate-test-password";
 
 #[derive(Default)]
 struct RecordingOutput {
@@ -85,11 +87,26 @@ impl TestServer {
         Result<Arc<dyn LiveSession>, OpenSessionError>,
         Arc<RecordingOutput>,
     ) {
+        self.connect_with(username, port, Self::key_file(), None)
+            .await
+    }
+
+    async fn connect_with(
+        &self,
+        username: &str,
+        port: u16,
+        auth: AuthMethod,
+        secret: Option<Secret>,
+    ) -> (
+        Result<Arc<dyn LiveSession>, OpenSessionError>,
+        Arc<RecordingOutput>,
+    ) {
         let output = Arc::new(RecordingOutput::default());
         let result = RusshConnector::new()
             .connect(ConnectRequest {
                 endpoint: Self::endpoint(username, port),
-                auth: Self::key_file(),
+                auth,
+                secret,
                 size: TerminalSize::new(80, 24).unwrap(),
                 known_hosts: Arc::clone(&self.known_hosts) as Arc<dyn KnownHosts>,
                 output: Arc::clone(&output) as Arc<dyn SessionOutput>,
@@ -202,6 +219,56 @@ async fn reports_a_rejected_login() {
     server.trusted_session().await;
 
     let (result, _) = server.connect_as("someone-else", TEST_SERVER_PORT).await;
+
+    assert_eq!(result.err(), Some(OpenSessionError::AuthenticationRejected));
+}
+
+#[tokio::test]
+#[ignore = "needs the SSH test server: scripts/test-ssh-server.sh up"]
+async fn logs_in_with_a_password() {
+    let server = TestServer::new();
+    server.trusted_session().await;
+    let password = Secret::new(TEST_PASSWORD.to_owned());
+
+    let (result, _) = server
+        .connect_with(
+            "sallygate",
+            TEST_SERVER_PORT,
+            AuthMethod::Password,
+            Some(password),
+        )
+        .await;
+
+    assert!(result.is_ok(), "{:?}", result.err());
+}
+
+#[tokio::test]
+#[ignore = "needs the SSH test server: scripts/test-ssh-server.sh up"]
+async fn asks_for_a_password_it_was_not_given() {
+    let server = TestServer::new();
+
+    let (result, _) = server
+        .connect_with("sallygate", TEST_SERVER_PORT, AuthMethod::Password, None)
+        .await;
+
+    assert_eq!(result.err(), Some(OpenSessionError::SecretRequired));
+}
+
+#[tokio::test]
+#[ignore = "needs the SSH test server: scripts/test-ssh-server.sh up"]
+async fn reports_a_wrong_password_as_a_rejected_login() {
+    let server = TestServer::new();
+    server.trusted_session().await;
+    let password = Secret::new("not-the-password".to_owned());
+
+    let (result, _) = server
+        .connect_with(
+            "sallygate",
+            TEST_SERVER_PORT,
+            AuthMethod::Password,
+            Some(password),
+        )
+        .await;
 
     assert_eq!(result.err(), Some(OpenSessionError::AuthenticationRejected));
 }

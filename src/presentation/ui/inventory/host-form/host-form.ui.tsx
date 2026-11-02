@@ -12,7 +12,9 @@ export function HostForm({ host, formId, onSubmit }: THostFormProps) {
   const [address, setAddress] = useState(host?.endpoint.address ?? '');
   const [port, setPort] = useState(String(host?.endpoint.port ?? DEFAULT_SSH_PORT));
   const [username, setUsername] = useState(host?.endpoint.username ?? '');
-  const [keyFilePath, setKeyFilePath] = useState(host?.keyFilePath ?? DEFAULT_KEY_FILE_PATH);
+  const [keyFilePath, setKeyFilePath] = useState(
+    host?.auth.type === 'keyFile' ? host.auth.path : DEFAULT_KEY_FILE_PATH,
+  );
 
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -21,7 +23,7 @@ export function HostForm({ host, formId, onSubmit }: THostFormProps) {
       label,
       group,
       endpoint: { address, port: Number(port), username },
-      keyFilePath,
+      auth: { type: 'keyFile', path: keyFilePath },
     });
   };
 

@@ -22,6 +22,7 @@ pub fn open_input() -> OpenSessionInput {
             Username::parse("ubuntu").unwrap(),
         ),
         auth: AuthMethod::KeyFile(KeyFilePath::parse("/keys/id_ed25519").unwrap()),
+        secret: None,
         size: TerminalSize::new(80, 24).unwrap(),
     }
 }

@@ -5,6 +5,7 @@ const COMMAND_ERROR_KINDS: Record<TCommandErrorKind, true> = {
   invalidInput: true,
   unknownHostKey: true,
   hostKeyChanged: true,
+  secretRequired: true,
   authenticationRejected: true,
   keyFileUnreadable: true,
   unreachable: true,

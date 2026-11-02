@@ -6,7 +6,6 @@
 use std::sync::Arc;
 
 use sallygate_application::sessions::OpenSessionInput;
-use sallygate_domain::credentials::{AuthMethod, KeyFilePath};
 use sallygate_domain::sessions::{SessionId, TerminalSize};
 use tauri::State;
 use tauri::ipc::Channel;
@@ -31,15 +30,13 @@ fn terminal_size(columns: u16, rows: u16) -> Result<TerminalSize, CommandError> 
 #[tauri::command]
 pub async fn open_session(
     services: State<'_, AppServices>,
-    request: OpenSessionRequest,
+    mut request: OpenSessionRequest,
     on_event: Channel<SessionEventDto>,
 ) -> Result<String, CommandError> {
     let input = OpenSessionInput {
+        secret: request.take_secret(),
         endpoint: request.endpoint.into_domain()?,
-        auth: AuthMethod::KeyFile(
-            KeyFilePath::parse(&request.key_file_path)
-                .map_err(|error| CommandError::invalid_input(&error))?,
-        ),
+        auth: request.auth.into_domain()?,
         size: terminal_size(request.columns, request.rows)?,
     };
 

@@ -112,20 +112,26 @@ struct HostRecord {
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 enum AuthRecord {
-    KeyFile { path: String },
+    KeyFile {
+        path: String,
+    },
+    /// Only the method; the password itself is never saved.
+    Password,
 }
 
 impl HostRecord {
     fn from_host(host: &Host) -> Self {
-        let AuthMethod::KeyFile(key_file_path) = host.auth();
         Self {
             id: host.id().to_string(),
             label: host.label().to_string(),
             address: host.endpoint().address().to_string(),
             port: host.endpoint().port().value(),
             username: host.endpoint().username().to_string(),
-            auth: AuthRecord::KeyFile {
-                path: key_file_path.as_path().display().to_string(),
+            auth: match host.auth() {
+                AuthMethod::KeyFile(key_file_path) => AuthRecord::KeyFile {
+                    path: key_file_path.as_path().display().to_string(),
+                },
+                AuthMethod::Password => AuthRecord::Password,
             },
             group: host.group().map(ToString::to_string),
         }
@@ -136,7 +142,12 @@ impl HostRecord {
     fn into_host(self) -> Result<Host, HostStoreError> {
         let invalid =
             |reason: String| HostStoreError::Read(format!("host \"{}\": {reason}", self.label));
-        let AuthRecord::KeyFile { path } = &self.auth;
+        let auth = match &self.auth {
+            AuthRecord::KeyFile { path } => AuthMethod::KeyFile(
+                KeyFilePath::parse(path).map_err(|error| invalid(error.to_string()))?,
+            ),
+            AuthRecord::Password => AuthMethod::Password,
+        };
 
         Ok(Host::new(
             self.id
@@ -148,9 +159,7 @@ impl HostRecord {
                 Port::try_from(self.port).map_err(|error| invalid(error.to_string()))?,
                 Username::parse(&self.username).map_err(|error| invalid(error.to_string()))?,
             ),
-            AuthMethod::KeyFile(
-                KeyFilePath::parse(path).map_err(|error| invalid(error.to_string()))?,
-            ),
+            auth,
             self.group
                 .as_deref()
                 .map(GroupName::parse)

@@ -18,3 +18,4 @@ One file per decision, numbered in order. Copy [0000-template.md](0000-template.
 | [0012](0012-async-ports-with-async-trait.md)                | Async ports as `async-trait` traits behind `Arc<dyn …>`              | Accepted                                  |
 | [0013](0013-ui-contract-channels-and-generated-types.md)    | UI contract with per-session channels and generated TypeScript types | Accepted                                  |
 | [0014](0014-confirm-unknown-host-keys-before-connecting.md) | Unknown host keys are confirmed by the user before connecting        | Accepted                                  |
+| [0015](0015-secrets-typed-at-connect-time.md)               | Passwords and key passphrases are typed at connect time              | Accepted                                  |

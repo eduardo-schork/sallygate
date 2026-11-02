@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use sallygate_domain::credentials::AuthMethod;
+use sallygate_domain::credentials::{AuthMethod, Secret};
 use sallygate_domain::inventory::SshEndpoint;
 use sallygate_domain::sessions::TerminalSize;
 use sallygate_domain::trust::HostKey;
@@ -25,6 +25,8 @@ pub trait SshConnector: Send + Sync {
 pub struct ConnectRequest {
     pub endpoint: SshEndpoint,
     pub auth: AuthMethod,
+    /// The password or key passphrase, when the user typed one.
+    pub secret: Option<Secret>,
     pub size: TerminalSize,
     pub known_hosts: Arc<dyn KnownHosts>,
     pub output: Arc<dyn SessionOutput>,
@@ -37,6 +39,8 @@ pub enum OpenSessionError {
     UnknownHostKey(HostKey),
     #[error("the server key changed since you trusted it; this can be an attack")]
     HostKeyChanged(HostKey),
+    #[error("a password or key passphrase is needed")]
+    SecretRequired,
     #[error("the server rejected the login")]
     AuthenticationRejected,
     #[error("could not read the private key: {0}")]

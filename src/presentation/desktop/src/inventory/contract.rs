@@ -1,10 +1,9 @@
-use sallygate_domain::credentials::{AuthMethod, KeyFilePath};
 use sallygate_domain::inventory::{GroupName, Host, HostId, HostLabel};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::command_error::CommandError;
-use crate::sessions::EndpointDto;
+use crate::sessions::{AuthDto, EndpointDto};
 
 /// A saved host as the UI shows it.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
@@ -18,7 +17,7 @@ pub struct HostDto {
     pub id: String,
     pub label: String,
     pub endpoint: EndpointDto,
-    pub key_file_path: String,
+    pub auth: AuthDto,
     #[ts(optional)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub group: Option<String>,
@@ -26,12 +25,11 @@ pub struct HostDto {
 
 impl From<&Host> for HostDto {
     fn from(host: &Host) -> Self {
-        let AuthMethod::KeyFile(key_file_path) = host.auth();
         Self {
             id: host.id().to_string(),
             label: host.label().to_string(),
             endpoint: EndpointDto::from(host.endpoint()),
-            key_file_path: key_file_path.as_path().display().to_string(),
+            auth: AuthDto::from(host.auth()),
             group: host.group().map(ToString::to_string),
         }
     }
@@ -50,7 +48,7 @@ pub struct SaveHostRequest {
     pub id: Option<String>,
     pub label: String,
     pub endpoint: EndpointDto,
-    pub key_file_path: String,
+    pub auth: AuthDto,
     /// Empty or missing means no group.
     #[ts(optional)]
     pub group: Option<String>,
@@ -72,9 +70,7 @@ impl SaveHostRequest {
             id,
             HostLabel::parse(&self.label).map_err(|error| invalid(&error))?,
             self.endpoint.into_domain()?,
-            AuthMethod::KeyFile(
-                KeyFilePath::parse(&self.key_file_path).map_err(|error| invalid(&error))?,
-            ),
+            self.auth.into_domain()?,
             group,
         ))
     }
@@ -93,7 +89,9 @@ mod tests {
                 port: 22,
                 username: "ubuntu".to_owned(),
             },
-            key_file_path: "~/.ssh/id_ed25519".to_owned(),
+            auth: AuthDto::KeyFile {
+                path: "~/.ssh/id_ed25519".to_owned(),
+            },
             group: group.map(ToOwned::to_owned),
         }
     }

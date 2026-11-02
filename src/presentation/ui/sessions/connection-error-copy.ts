@@ -16,13 +16,17 @@ export const CONNECTION_ERROR_COPY: Record<TCommandErrorKind, TErrorCopy> = {
     title: 'The server key changed',
     hint: 'Sallygate did not connect. Remove the old key from ~/.ssh/known_hosts only if you know why it changed.',
   },
+  secretRequired: {
+    title: 'A password is needed',
+    hint: 'This host logs in with a password or a key passphrase.',
+  },
   authenticationRejected: {
     title: 'The server rejected the login',
     hint: 'Check the username, and that this key is listed in ~/.ssh/authorized_keys on the server.',
   },
   keyFileUnreadable: {
     title: 'Could not read the private key',
-    hint: 'Check the path. Keys protected by a passphrase are not supported yet.',
+    hint: 'Check the path, and that the file is a private key.',
   },
   unreachable: {
     title: 'Could not reach the server',

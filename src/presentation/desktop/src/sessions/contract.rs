@@ -1,3 +1,4 @@
+use sallygate_domain::credentials::{AuthMethod, KeyFilePath, Secret};
 use sallygate_domain::inventory::{HostAddress, Port, SshEndpoint, Username};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -28,6 +29,13 @@ impl From<&SshEndpoint> for EndpointDto {
     }
 }
 
+impl OpenSessionRequest {
+    /// Takes the secret out, wrapped so it is wiped when dropped.
+    pub fn take_secret(&mut self) -> Option<Secret> {
+        self.secret.take().map(Secret::new)
+    }
+}
+
 impl EndpointDto {
     pub fn into_domain(self) -> Result<SshEndpoint, CommandError> {
         Ok(SshEndpoint::new(
@@ -39,8 +47,48 @@ impl EndpointDto {
     }
 }
 
-/// Open a terminal on `endpoint`, logging in with the private key at `key_file_path`.
-#[derive(Debug, Clone, Deserialize, TS)]
+/// How a host logs in. A password or passphrase is never part of it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(
+    tag = "type",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
+#[ts(
+    rename = "TAuth",
+    export,
+    export_to = "../../ui/sessions/sessions-contract.ts"
+)]
+pub enum AuthDto {
+    KeyFile { path: String },
+    Password,
+}
+
+impl From<&AuthMethod> for AuthDto {
+    fn from(auth: &AuthMethod) -> Self {
+        match auth {
+            AuthMethod::KeyFile(path) => Self::KeyFile {
+                path: path.as_path().display().to_string(),
+            },
+            AuthMethod::Password => Self::Password,
+        }
+    }
+}
+
+impl AuthDto {
+    pub fn into_domain(self) -> Result<AuthMethod, CommandError> {
+        Ok(match self {
+            Self::KeyFile { path } => AuthMethod::KeyFile(
+                KeyFilePath::parse(&path).map_err(|error| CommandError::invalid_input(&error))?,
+            ),
+            Self::Password => AuthMethod::Password,
+        })
+    }
+}
+
+/// Open a terminal on `endpoint`. `secret` is the password or key passphrase the user
+/// just typed; it is used once and never saved (ADR-0015). No `Debug`, so it never prints.
+#[derive(Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(
     rename = "TOpenSessionRequest",
@@ -49,7 +97,9 @@ impl EndpointDto {
 )]
 pub struct OpenSessionRequest {
     pub endpoint: EndpointDto,
-    pub key_file_path: String,
+    pub auth: AuthDto,
+    #[ts(optional)]
+    pub secret: Option<String>,
     pub columns: u16,
     pub rows: u16,
 }
@@ -94,6 +144,28 @@ mod tests {
         assert_eq!(
             to_json(&SessionEventDto::Exited { exit_status: 3 }),
             r#"{"type":"exited","exitStatus":3}"#
+        );
+    }
+
+    #[test]
+    fn auth_is_tagged_by_type_and_round_trips() {
+        let key_file = AuthDto::KeyFile {
+            path: "~/.ssh/id_ed25519".to_owned(),
+        };
+        assert_eq!(
+            serde_json::to_string(&key_file).unwrap(),
+            r#"{"type":"keyFile","path":"~/.ssh/id_ed25519"}"#
+        );
+        assert_eq!(
+            serde_json::to_string(&AuthDto::Password).unwrap(),
+            r#"{"type":"password"}"#
+        );
+        let auth = key_file.into_domain().unwrap();
+        assert_eq!(
+            AuthDto::from(&auth),
+            AuthDto::KeyFile {
+                path: "~/.ssh/id_ed25519".to_owned()
+            }
         );
     }
 

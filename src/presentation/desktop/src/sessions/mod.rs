@@ -6,4 +6,4 @@ pub mod commands;
 mod contract;
 mod error_mapping;
 
-pub use contract::EndpointDto;
+pub use contract::{AuthDto, EndpointDto};

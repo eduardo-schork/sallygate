@@ -6,7 +6,7 @@ import { HOSTS_TAB_ID, useSessionTabs } from './use-session-tabs';
 
 const request: TOpenSessionRequest = {
   endpoint: { address: '127.0.0.1', port: 2222, username: 'sallygate' },
-  keyFilePath: '~/.ssh/id_ed25519',
+  auth: { type: 'keyFile', path: '~/.ssh/id_ed25519' },
   columns: 80,
   rows: 24,
 };

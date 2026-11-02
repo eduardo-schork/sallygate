@@ -54,12 +54,23 @@ impl SshConnector for RusshConnector {
         let ConnectRequest {
             endpoint,
             auth,
+            secret,
             size,
             known_hosts,
             output,
         } = request;
-        let AuthMethod::KeyFile(key_file_path) = auth;
-        let private_key = load_private_key(&key_file_path)?;
+        // Fail before dialing when the secret is missing, so the UI can ask for it.
+        let private_key = match &auth {
+            AuthMethod::KeyFile(key_file_path) => {
+                Some(load_private_key(key_file_path, secret.as_ref())?)
+            }
+            AuthMethod::Password => None,
+        };
+        let password = match (&auth, &secret) {
+            (AuthMethod::Password, None) => return Err(OpenSessionError::SecretRequired),
+            (AuthMethod::Password, Some(secret)) => Some(secret.expose()),
+            (AuthMethod::KeyFile(_), _) => None,
+        };
 
         let (server_key_check, rejection) = ServerKeyCheck::new(endpoint.clone(), known_hosts);
         let server = (endpoint.address().as_str(), endpoint.port().value());
@@ -81,18 +92,25 @@ impl SshConnector for RusshConnector {
                 }
             };
 
-        let hash_algorithm = connection
-            .best_supported_rsa_hash()
-            .await
-            .map_err(|error| protocol_error(&error))?
-            .flatten();
-        let authentication = connection
-            .authenticate_publickey(
-                endpoint.username().as_str(),
-                PrivateKeyWithHashAlg::new(Arc::new(private_key), hash_algorithm),
-            )
-            .await
-            .map_err(|error| protocol_error(&error))?;
+        let username = endpoint.username().as_str();
+        let authentication = if let Some(private_key) = private_key {
+            let hash_algorithm = connection
+                .best_supported_rsa_hash()
+                .await
+                .map_err(|error| protocol_error(&error))?
+                .flatten();
+            connection
+                .authenticate_publickey(
+                    username,
+                    PrivateKeyWithHashAlg::new(Arc::new(private_key), hash_algorithm),
+                )
+                .await
+        } else {
+            connection
+                .authenticate_password(username, password.unwrap_or_default())
+                .await
+        }
+        .map_err(|error| protocol_error(&error))?;
         if !authentication.success() {
             return Err(OpenSessionError::AuthenticationRejected);
         }

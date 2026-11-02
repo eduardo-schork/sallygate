@@ -24,7 +24,7 @@ function inMemoryInventory(initialHosts: THost[] = []): TInventoryGateway {
 const newHost: TSaveHostRequest = {
   label: 'web',
   endpoint: { address: '10.0.0.5', port: 22, username: 'ubuntu' },
-  keyFilePath: '~/.ssh/id_ed25519',
+  auth: { type: 'keyFile', path: '~/.ssh/id_ed25519' },
 };
 
 // Gateways are created once per test: a new gateway on every render would reload forever.

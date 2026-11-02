@@ -43,7 +43,7 @@ Dependencies point inward only. Inner layers never import outer ones.
 
 | Layer              | Contains                                                                                       | May depend on                                      | Must not contain                                            |
 | ------------------ | ---------------------------------------------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------- |
-| **domain**         | Entities, value objects, domain errors, pure domain rules                                      | `std`, `thiserror`, `uuid`                         | I/O, async runtime, serialization, framework types          |
+| **domain**         | Entities, value objects, domain errors, pure domain rules                                      | `std`, `thiserror`, `uuid`, `zeroize`              | I/O, async runtime, serialization, framework types          |
 | **application**    | Use cases (one per user intent), ports (traits), application errors                            | domain, `async-trait`, `thiserror`                 | Concrete libraries for SSH, storage, keychain or UI         |
 | **infrastructure** | Adapters implementing ports: `russh`, `known_hosts`, later `russh-sftp`, `keyring`, JSON files | application, domain, external crates (never Tauri) | Business rules                                              |
 | **presentation**   | `desktop`: Tauri commands, DTOs, the composition root. `ui`: React screens, hooks, gateways    | everything                                         | Business rules, direct library calls that bypass a use case |
@@ -74,7 +74,7 @@ src/
 │   └── src/
 │       ├── inventory/          host.rs, host_id.rs, host_label.rs, group_name.rs,
 │       │                       host_address.rs, port.rs, username.rs, ssh_endpoint.rs
-│       ├── credentials/        auth_method.rs, key_file_path.rs
+│       ├── credentials/        auth_method.rs, key_file_path.rs, secret.rs
 │       ├── trust/              host_key.rs, host_key_status.rs
 │       └── sessions/           session_id.rs, terminal_size.rs, session_end.rs
 ├── application/                crate sallygate-application: use cases and ports
@@ -155,12 +155,13 @@ Things the UI needs that faber-ui does not offer yet. Each is a local stand-in u
 
 ## Data flow: opening a terminal
 
-1. The user clicks _Connect_ on a host card; a session tab opens and its `useConnection` calls `sessions-gateway.ts` with the host's endpoint and key file.
+1. The user clicks _Connect_ on a host card; a session tab opens and its `useConnection` calls `sessions-gateway.ts` with the host's endpoint and auth method (`TAuth`), plus a password or passphrase if the user just typed one.
 2. The gateway invokes `open_session(request, onEvent)` with a new `Channel`.
-3. `presentation/desktop` turns the DTO into domain values (`SshEndpoint`, `AuthMethod`, `TerminalSize`) and calls the `OpenSession` use case.
+3. `presentation/desktop` turns the DTO into domain values (`SshEndpoint`, `AuthMethod`, `Secret`, `TerminalSize`) and calls the `OpenSession` use case.
 4. `OpenSession` asks the `SshConnector` port to connect, passing the `KnownHosts` port and a `SessionOutput` that writes to the channel.
 5. `RusshConnector` connects; `ServerKeyCheck` asks `KnownHosts` about the server key:
-   - trusted → it authenticates with the key file, opens a PTY and a shell, and returns a live session;
+   - trusted → it authenticates with the key file or password, opens a PTY and a shell, and returns a live session;
+   - a needed secret is missing (password host, encrypted key) → it fails with `secretRequired` before dialing; the UI asks for it and opens again ([ADR-0015](decisions/0015-secrets-typed-at-connect-time.md));
    - unknown or changed → no session; the error carries the key, the UI asks the user, and on trust calls `trust_host_key` and opens again ([ADR-0014](decisions/0014-confirm-unknown-host-keys-before-connecting.md)).
 6. The use case registers the session in `SessionRegistry` and returns its `SessionId`. Output streams through the channel; `session-output-buffer.ts` keeps it until the terminal mounts.
 7. Keystrokes go back through `write_to_session`, size changes through `resize_session`, and closing the tab calls `close_session`. If the shell exits or the connection drops on its own, the session sends `exited` or `disconnected` and leaves the registry.
@@ -172,7 +173,7 @@ Host {
   id: HostId
   label: HostLabel           // 1–64 characters
   endpoint: SshEndpoint      // HostAddress, Port, Username
-  auth: AuthMethod           // KeyFile(KeyFilePath); Password and Agent planned
+  auth: AuthMethod           // KeyFile(KeyFilePath) | Password; Agent planned
   group: Option<GroupName>   // groups are just names; a group exists while a host uses it
 }
 ```
