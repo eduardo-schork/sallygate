@@ -49,6 +49,7 @@ Follows faber-ui's conventions ([ADR-0010](decisions/0010-frontend-follows-faber
 - Paths and file names in kebab case. A component lives in its own folder:
   `host-card/host-card.ui.tsx`, `host-card.styles.ts`, `host-card.types.ts`, `host-card.constants.ts`, `host-card.test.tsx`, `index.ts`.
 - Build screens from faber-ui components first; use a raw element only when no component fits. Styling with styled-components and faber-ui tokens; no hard-coded colors, sizes, radii, shadows or fonts. A missing token is a faber-ui change ([ADR-0003](decisions/0003-faber-ui-design-system.md)).
+- To render a styled wrapper of a faber-ui component as another element, pass `forwardedAs`, not `as`: `as` on a `styled(Component)` replaces the component and drops its styles.
 - Components render and forward intents; state and actions live in hooks; each context's `*-gateway.ts` is the only file that imports `@tauri-apps/api` ([architecture.md](architecture.md), UI rules).
 - Semantic HTML, accessible names, keyboard support and `prefers-reduced-motion` support on every screen.
 

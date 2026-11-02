@@ -64,7 +64,10 @@ export function SessionPanel({ request, isActive, onCloseTab }: TSessionPanelPro
         <SessionPanelMessage>
           <VFlex gap="MD">
             <Alert color="error" title={CONNECTION_ERROR_COPY[state.error.kind].title} role="alert">
-              {CONNECTION_ERROR_COPY[state.error.kind].hint} {state.error.message}
+              <VFlex gap="XXS">
+                <span>{CONNECTION_ERROR_COPY[state.error.kind].hint}</span>
+                <Text.Small>{state.error.message}</Text.Small>
+              </VFlex>
             </Alert>
             {closeTabActions('Try again', () => void connect(request))}
           </VFlex>

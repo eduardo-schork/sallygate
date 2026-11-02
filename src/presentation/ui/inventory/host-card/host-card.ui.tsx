@@ -8,7 +8,7 @@ import type { THostCardProps } from './host-card.types';
 /** A saved host: its name, where it points, and the two things you do with it. */
 export function HostCard({ host, onConnect, onEdit }: THostCardProps) {
   return (
-    <HostCardRoot as="article" aria-label={host.label}>
+    <HostCardRoot forwardedAs="article" aria-label={host.label}>
       <HostCardIcon aria-hidden="true">
         <MonitorIcon />
       </HostCardIcon>

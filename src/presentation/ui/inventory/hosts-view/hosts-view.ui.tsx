@@ -6,7 +6,6 @@ import {
   FLEX_JUSTIFIES,
   FLEX_WRAPS,
   HFlex,
-  Input,
   Spinner,
   Text,
   Title,
@@ -17,7 +16,7 @@ import { useState } from 'react';
 
 import { groupHosts, matchesSearch } from '../group-hosts';
 import { HostCard } from '../host-card';
-import { HostGrid, HostsViewRoot } from './hosts-view.styles';
+import { HostGrid, HostsSearch, HostsToolbar, HostsViewRoot } from './hosts-view.styles';
 import type { THostsViewProps } from './hosts-view.types';
 
 /** The saved hosts, grouped, with search and a way to add more. */
@@ -47,8 +46,8 @@ export function HostsView({
         wrap={FLEX_WRAPS.WRAP}
       >
         <Title.H1>Hosts</Title.H1>
-        <HFlex gap="SM" align={FLEX_ALIGNS.CENTER}>
-          <Input
+        <HostsToolbar>
+          <HostsSearch
             type="search"
             aria-label="Search hosts"
             placeholder="Search by name, group or address"
@@ -56,7 +55,7 @@ export function HostsView({
             onChange={(event) => setSearch(event.target.value)}
           />
           {newHostButton}
-        </HFlex>
+        </HostsToolbar>
       </HFlex>
 
       {loadError ? (

@@ -1,4 +1,4 @@
-import { SIZES, SPACINGS, VFlex } from '@faber-ui/react';
+import { HFlex, Input, SIZES, SPACINGS, VFlex } from '@faber-ui/react';
 import styled from 'styled-components';
 
 export const HostsViewRoot = styled(VFlex)`
@@ -6,6 +6,20 @@ export const HostsViewRoot = styled(VFlex)`
   min-block-size: 0;
   padding: ${SPACINGS.LG};
   overflow-y: auto;
+`;
+
+/** Search and the add button; the button never shrinks below its label. */
+export const HostsToolbar = styled(HFlex)`
+  align-items: center;
+  gap: ${SPACINGS.SM};
+
+  & > button {
+    flex: none;
+  }
+`;
+
+export const HostsSearch = styled(Input)`
+  inline-size: calc(${SIZES.XXL} * 3);
 `;
 
 /** Cards flow into as many columns as fit, each at least a readable width. */

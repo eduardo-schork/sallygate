@@ -11,8 +11,8 @@ import { HOSTS_TAB_ID, useSessionTabs } from '../sessions/use-session-tabs';
 import type { TCommandError } from '../shared/command-error-contract';
 import { AppRoot, HostsPanel } from './app.styles';
 
-type TDrawerState =
-  { readonly isOpen: false } | { readonly isOpen: true; readonly host?: THost | undefined };
+// The host stays while the drawer closes, so its title and fields do not flip mid-animation.
+type TDrawerState = { readonly isOpen: boolean; readonly host?: THost | undefined };
 
 /** The window: tabs on top, the hosts screen or a session below. */
 export function App() {
@@ -21,6 +21,10 @@ export function App() {
   const [drawer, setDrawer] = useState<TDrawerState>({ isOpen: false });
   const [isSaving, setIsSaving] = useState(false);
   const [drawerError, setDrawerError] = useState<TCommandError>();
+
+  const closeDrawer = () => {
+    setDrawer((current) => ({ ...current, isOpen: false }));
+  };
 
   const openDrawer = (host?: THost) => {
     setDrawerError(undefined);
@@ -35,7 +39,7 @@ export function App() {
       setDrawerError(result.error);
       return;
     }
-    setDrawer({ isOpen: false });
+    closeDrawer();
   };
 
   const handleDelete = async (host: THost) => {
@@ -44,7 +48,7 @@ export function App() {
       setDrawerError(error);
       return;
     }
-    setDrawer({ isOpen: false });
+    closeDrawer();
   };
 
   const connectTo = (host: THost) => {
@@ -79,7 +83,7 @@ export function App() {
       ))}
       <HostDrawer
         open={drawer.isOpen}
-        host={drawer.isOpen ? drawer.host : undefined}
+        host={drawer.host}
         isSaving={isSaving}
         error={drawerError}
         onSave={(request) => void handleSave(request)}
