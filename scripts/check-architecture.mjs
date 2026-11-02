@@ -4,7 +4,10 @@ import { execFileSync } from 'node:child_process';
 // workspace crates and external crates listed here.
 const ALLOWED_DEPENDENCIES = {
   'sallygate-domain': { workspace: [], external: ['thiserror', 'uuid'] },
-  'sallygate-application': { workspace: ['sallygate-domain'], external: ['thiserror', 'uuid'] },
+  'sallygate-application': {
+    workspace: ['sallygate-domain'],
+    external: ['async-trait', 'thiserror', 'uuid'],
+  },
   'sallygate-infrastructure': {
     workspace: ['sallygate-domain', 'sallygate-application'],
     external: null,
