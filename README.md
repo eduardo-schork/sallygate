@@ -25,4 +25,13 @@ bun run tauri dev        # run the app
 | `bun run test:rust`          | Rust tests                                      |
 | `bun run check:architecture` | Crate dependencies follow the architecture rule |
 
+### SSH test server
+
+Integration tests and local development use a disposable SSH server in Docker, so they never touch a real machine:
+
+```bash
+scripts/test-ssh-server.sh up     # 127.0.0.1:2222, user `sallygate`, key in tests/ssh-server/.keys/
+scripts/test-ssh-server.sh down
+```
+
 Architecture, conventions and decisions are in [docs/](docs/README.md).

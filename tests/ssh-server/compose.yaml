@@ -1,0 +1,9 @@
+name: sallygate-test
+
+services:
+  ssh-server:
+    build: .
+    ports:
+      - '127.0.0.1:2222:22'
+    volumes:
+      - ./.keys:/test-keys:ro

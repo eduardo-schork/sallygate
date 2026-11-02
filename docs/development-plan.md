@@ -7,7 +7,7 @@ The step-by-step plan for building Sallygate, and the place where progress is tr
 ## Current focus
 
 - **Stage:** 0 — Foundation
-- **Next task:** Stage 1, local `openssh-server` test container
+- **Next task:** Stage 1, decide the async-port approach and the UI type-generation tool (ADRs)
 - **Blocked on:** nothing
 
 Update this block whenever the focus moves.
@@ -44,8 +44,8 @@ Update this block whenever the focus moves.
 **Branch:** `develop`
 **Done when:** the app opens a working, resizable interactive shell on a real server, typed into an `xterm.js` terminal.
 
-- [ ] Local test server: an `openssh-server` Docker container with a test user and key
-- [ ] Throwaway spike in `spikes/ssh-cli/` (not part of the layers): connect with `russh`, authenticate with a key file, run `uname -a`, then an interactive PTY over stdin/stdout. Record what we learned in the progress log, then delete it.
+- [x] Local test server: `tests/ssh-server/` (Alpine + OpenSSH, user `sallygate`, key and password auth) on `127.0.0.1:2222`; `scripts/test-ssh-server.sh up|down`
+- [x] Throwaway spike in `spikes/ssh-cli/` (gitignored, not part of the layers): key auth, server fingerprint, `exec`, PTY shell and resize all work with `russh` 0.65. Delete it when the `RusshConnector` adapter lands.
 - [ ] Decide the async-port approach and the UI type-generation tool (ADRs)
 - [ ] `sessions` domain: `SessionId`, `TerminalSize`, session states
 - [ ] `trust` domain + `known_hosts` file adapter: verify, unknown key, changed key
@@ -106,6 +106,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-02** — SSH spike with `russh` 0.65 against the test server. Learned: the server key arrives in `client::Handler::check_server_key` as `russh::keys::PublicKeyOrCertificate` (fingerprint via `HashAlg::Sha256`); `russh::keys` has `check_known_hosts_path` / `learn_known_hosts_path`; a terminal is `channel_open_session` → `request_pty` → `request_shell`, resize is `window_change`, output comes from `channel.wait()` as `ChannelMsg::Data` and ends with `ExitStatus`; shells send escape codes (bracketed paste, colors) that `xterm.js` must receive as raw bytes.
 - **2026-11-02** — Foundation on `develop`: Tauri 2 + React app with a faber-ui empty state, layer crates, strict Rust and TS lint, layer-boundary checks (both proven to reject a violation). Typecheck, lint, format, tests, UI build and Clippy pass locally; `tauri dev` opens the window. For now: commit straight to `develop` with Conventional Commits, no CI (local checks are the gate).
 - **2026-11-02** — Code architecture set: DDD + Clean + Ports and Adapters, one crate per layer (ADR-0009); UI follows faber-ui conventions (ADR-0010); [conventions.md](conventions.md) added; plan reworked around contexts and layers.
 - **2026-11-02** — Docs structure created (architecture, ADRs 0001–0008, roadmap, security, glossary, this plan).

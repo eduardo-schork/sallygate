@@ -23,3 +23,9 @@ src-tauri/gen/
 .env
 .env.*
 !.env.example
+
+# Throwaway keys for the local SSH test server
+tests/ssh-server/.keys/
+
+# Throwaway experiments, never committed
+spikes/
