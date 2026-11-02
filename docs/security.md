@@ -9,7 +9,7 @@ Sallygate holds the keys to the owner's servers. Treat every change here as secu
 | Private keys                     | Key files the user points to, usually in `~/.ssh` (read by the core when a session opens, never copied or sent to the UI) |
 | Key passphrases and passwords    | Not supported yet; planned for the OS keychain, later the vault                                                           |
 | Trusted server fingerprints      | `~/.ssh/known_hosts`, shared with the `ssh` command                                                                       |
-| Host list (addresses, usernames) | Not stored yet; planned for `hosts.json` (not secret, but private)                                                        |
+| Host list (addresses, usernames) | `hosts.json` in the app data folder; not secret, but private; never holds keys or passwords                               |
 
 ## Rules
 

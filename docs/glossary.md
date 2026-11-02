@@ -27,8 +27,9 @@
 ## Project
 
 - **Host**: a saved server entry (label, address, port, username, auth method, group, tags). Part of `inventory`.
-- **Group**: a named folder of hosts. Part of `inventory`.
-- **Session**: one live SSH connection with a shell, shown as a terminal. Part of `sessions`.
+- **Group**: a name hosts are filed under (`Cloud`, `Home`). It exists while at least one host uses it. Part of `inventory`.
+- **Session**: one live SSH connection with a shell, shown as a terminal in its own tab. Part of `sessions`.
+- **Tab**: the Hosts screen or one session; closing a session tab closes its session.
 - **Endpoint**: where to connect and as whom, `username@address:port` (`SshEndpoint`).
 - **Host key**: a server's public key, verified by `trust` against known hosts.
 - **Core**: the Rust side of the app. Owns connections and secrets.

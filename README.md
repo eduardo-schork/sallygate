@@ -2,7 +2,7 @@
 
 A desktop SSH and SFTP manager built with Tauri 2, Rust and React + [faber-ui](https://github.com/eduardo-schork/faber-ui).
 
-> Early development. Today the app opens a terminal on a server over SSH with a private key, and asks before trusting a new server key.
+> Early development. Today you can save hosts in groups and open a terminal on each one, in its own tab, over SSH with a private key. Sallygate asks before trusting a new server key.
 
 Planned: saved hosts and groups, tabbed SSH terminal, dual-pane SFTP, SSH keys, snippets, port forwarding and jump hosts. Later: an encrypted vault and a secrets manager.
 
@@ -17,6 +17,8 @@ bun run tauri dev        # run the app
 
 | Command                      | What it checks                                  |
 | ---------------------------- | ----------------------------------------------- |
+| `bun run check`              | Everything below except integration, fail-fast  |
+| `bun run check:full`         | Everything, including integration tests         |
 | `bun run typecheck`          | TypeScript types                                |
 | `bun run lint`               | ESLint, layer boundaries and kebab-case paths   |
 | `bun run format:check`       | Prettier                                        |
