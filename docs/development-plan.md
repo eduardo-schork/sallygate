@@ -7,7 +7,7 @@ The step-by-step plan for building Sallygate, and the place where progress is tr
 ## Current focus
 
 - **Stage:** 0 — Foundation
-- **Next task:** Stage 1, decide the async-port approach and the UI type-generation tool (ADRs)
+- **Next task:** Stage 1, Tauri commands, session channel and composition root
 - **Blocked on:** nothing
 
 Update this block whenever the focus moves.
@@ -45,12 +45,12 @@ Update this block whenever the focus moves.
 **Done when:** the app opens a working, resizable interactive shell on a real server, typed into an `xterm.js` terminal.
 
 - [x] Local test server: `tests/ssh-server/` (Alpine + OpenSSH, user `sallygate`, key and password auth) on `127.0.0.1:2222`; `scripts/test-ssh-server.sh up|down`
-- [x] Throwaway spike in `spikes/ssh-cli/` (gitignored, not part of the layers): key auth, server fingerprint, `exec`, PTY shell and resize all work with `russh` 0.65. Delete it when the `RusshConnector` adapter lands.
-- [ ] Decide the async-port approach and the UI type-generation tool (ADRs)
-- [ ] `sessions` domain: `SessionId`, `TerminalSize`, session states
-- [ ] `trust` domain + `known_hosts` file adapter: verify, unknown key, changed key
-- [ ] `sessions` application: `OpenSession`, `WriteToSession`, `ResizeSession`, `CloseSession` use cases; `SshConnector` and `SessionEvents` ports; tests with fakes
-- [ ] `RusshConnector` adapter with integration tests against the Docker server
+- [x] Throwaway spike in `spikes/ssh-cli/`: key auth, server fingerprint, `exec`, PTY shell and resize all work with `russh` 0.65. Deleted once `RusshConnector` landed.
+- [x] Decide the async-port approach, the UI contract and the host key flow (ADR-0012, 0013, 0014)
+- [x] Domain: `SshEndpoint` (address, port, username), `AuthMethod::KeyFile`, `HostKey`/`HostKeyStatus`, `SessionId`, `TerminalSize`, `SessionEnd`
+- [x] `trust`: `KnownHosts` port, `TrustHostKey` use case, `KnownHostsFile` adapter (unknown, trusted, changed)
+- [x] `sessions` application: `OpenSession`, `WriteToSession`, `ResizeSession`, `CloseSession`; `SshConnector`, `LiveSession` and `SessionOutput` ports; `SessionRegistry`; tests with fakes
+- [x] `RusshConnector` adapter with 8 integration tests against the Docker server (`bun run test:integration`)
 - [ ] Tauri driving adapter: `open_session`, `session_write`, `session_resize`, `session_close` commands and the `session_output` event; wiring in the composition root
 - [ ] Measure: events with base64 bytes vs a Tauri channel; record the choice as an ADR
 - [ ] UI `sessions` context in `src/presentation/ui/sessions/`: `sessions-gateway.ts`, `use-session` hook, `terminal-view` component with `xterm.js`
@@ -106,6 +106,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-02** — Sessions core done: domain values, use cases with ports, `KnownHostsFile` and `RusshConnector` adapters. 8 integration tests pass against the Docker server (unknown/changed key, shell output, resize, exit status, user close, rejected login, unreachable server). Spike deleted.
 - **2026-11-02** — Source layout reorganized by layer under `src/` (`domain`, `application`, `infrastructure`, `presentation/{desktop,ui}`); UI simplified to gateway + hooks + components per context (ADR-0011). All checks pass and the app launches from the new layout.
 - **2026-11-02** — SSH spike with `russh` 0.65 against the test server. Learned: the server key arrives in `client::Handler::check_server_key` as `russh::keys::PublicKeyOrCertificate` (fingerprint via `HashAlg::Sha256`); `russh::keys` has `check_known_hosts_path` / `learn_known_hosts_path`; a terminal is `channel_open_session` → `request_pty` → `request_shell`, resize is `window_change`, output comes from `channel.wait()` as `ChannelMsg::Data` and ends with `ExitStatus`; shells send escape codes (bracketed paste, colors) that `xterm.js` must receive as raw bytes.
 - **2026-11-02** — Foundation on `develop`: Tauri 2 + React app with a faber-ui empty state, layer crates, strict Rust and TS lint, layer-boundary checks (both proven to reject a violation). Typecheck, lint, format, tests, UI build and Clippy pass locally; `tauri dev` opens the window. For now: commit straight to `develop` with Conventional Commits, no CI (local checks are the gate).

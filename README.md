@@ -23,6 +23,7 @@ bun run tauri dev        # run the app
 | `bun run test`               | UI and lint-rule tests (Vitest)                 |
 | `bun run lint:rust`          | `rustfmt` and Clippy                            |
 | `bun run test:rust`          | Rust tests                                      |
+| `bun run test:integration`   | Rust tests against the SSH test server          |
 | `bun run check:architecture` | Crate dependencies follow the architecture rule |
 
 ### SSH test server

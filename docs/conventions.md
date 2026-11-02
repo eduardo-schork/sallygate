@@ -54,12 +54,12 @@ Follows faber-ui's conventions ([ADR-0010](decisions/0010-frontend-follows-faber
 
 ## Tests
 
-| Layer          | What to test                              | How                                                                                       |
-| -------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------- |
-| domain         | Every rule and value-object validation    | Plain unit tests, no mocks needed                                                         |
-| application    | Every use case, success and failure paths | Fake in-memory adapters for each port                                                     |
-| infrastructure | Each adapter against the real thing       | Integration tests: temp dirs for files, an `openssh-server` Docker container for SSH/SFTP |
-| UI             | Hooks and components                      | Vitest + Testing Library with an in-memory gateway                                        |
+| Layer          | What to test                              | How                                                                                                                                                                   |
+| -------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| domain         | Every rule and value-object validation    | Plain unit tests, no mocks needed                                                                                                                                     |
+| application    | Every use case, success and failure paths | Fake in-memory adapters for each port                                                                                                                                 |
+| infrastructure | Each adapter against the real thing       | Integration tests in `src/infrastructure/tests/`: temp dirs for files, the Docker SSH server for SSH/SFTP; marked `#[ignore]` and run with `bun run test:integration` |
+| UI             | Hooks and components                      | Vitest + Testing Library with an in-memory gateway                                                                                                                    |
 
 A bug fix starts with a failing test that reproduces it.
 
@@ -67,7 +67,7 @@ A bug fix starts with a failing test that reproduces it.
 
 - **For now, commit straight to `develop`.** Typed branches (`feat/`, `fix/`, `refactor/`, `docs/`, `test/`, `chore/`, `ci/` plus a short kebab-case name, e.g. `feat/host-drawer`) come back later ([ADR-0007](decisions/0007-semver-and-gitflow.md)).
 - Work in the repository's main checkout; no git worktrees.
-- Commit only work that is implemented, tested, and passes every local check: `bun run typecheck`, `lint`, `format:check`, `test`, `lint:rust`, `test:rust`, `check:architecture`. There is no CI yet; these checks are the gate.
+- Commit only work that is implemented, tested, and passes every local check: `bun run typecheck`, `lint`, `format:check`, `test`, `lint:rust`, `test:rust`, `check:architecture`, and `test:integration` (with `scripts/test-ssh-server.sh up`) when infrastructure adapters changed. There is no CI yet; these checks are the gate.
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org): `<type>(<scope>): <summary>`, imperative, lower case, no period. Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `build`, `ci`, `perf`, `style`. The scope is a bounded context (`sessions`, `inventory`…) or an area (`ui`, `core`, `docs`). Example: `feat(sessions): open a pty channel over russh`.
 - One concern per commit. A commit updates the docs it affects ([docs/README.md](README.md), living memory rules).
 - No AI attribution in commits or PRs.
