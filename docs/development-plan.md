@@ -6,10 +6,9 @@ The step-by-step plan for building Sallygate, and the place where progress is tr
 
 ## Current focus
 
-- **Stage:** 1 — SSH terminal (built; waiting on the manual check)
-- **Next task:** the owner tests the app window against the test server, then their own server
-- **Then:** Stage 2, starting with the `inventory` domain (`Host`, `Group`)
-- **Blocked on:** the owner's manual check
+- **Stage:** 2 — Hosts and tabs (hosts, editor and tabs built)
+- **Next task:** end-to-end check in the native window (needs Computer use, or the owner), then `credentials` (password, ssh-agent, keychain)
+- **Blocked on:** the native-window check for Stages 1 and 2
 
 Update this block whenever the focus moves.
 
@@ -63,13 +62,13 @@ Update this block whenever the focus moves.
 **Branch:** `develop`
 **Done when:** the owner uses Sallygate instead of `ssh` in the terminal for a week. Then cut `release/0.1.0`.
 
-- [ ] `inventory` domain: `Host`, `Group` and their value objects; application: `SaveHost`, `ListHosts`, `DeleteHost`; `HostRepository` port; `JsonHostRepository` adapter
+- [x] `inventory` domain: `Host`, `HostId`, `HostLabel`, `GroupName` (groups are names on hosts); application: `SaveHost`, `ListHosts`, `DeleteHost`; `HostRepository` port; `JsonHostRepository` adapter (`hosts.json` in the app data folder, atomic writes)
 - [ ] `credentials`: `SecretStore` port, `KeychainSecretStore` adapter (`keyring`); auth methods: key file, password, ssh-agent
-- [ ] UI `inventory` context: gateway, hooks, components
-- [ ] Hosts screen: group and host cards, search, quick connect (Termius-style layout, faber-ui)
-- [ ] Host drawer: create and edit a host
-- [ ] Window tab bar: one tab per session, close and switch
-- [ ] Host key prompts in the UI (unknown key, changed key)
+- [x] UI `inventory` context: `inventory-gateway.ts`, `use-hosts`, host card, host form, host drawer, hosts view
+- [x] Hosts screen: hosts grouped by name, search, empty state (Termius-style layout, faber-ui). Quick connect without saving was dropped for now: every connection starts from a saved host.
+- [x] Host drawer: create, edit and delete (with confirmation) a host
+- [x] Window tab bar: Hosts plus one tab per session; switching keeps sessions running; closing a tab closes its session
+- [x] Host key prompts in the UI (unknown key, changed key), per session tab
 - [ ] Import `~/.ssh/config`
 - [ ] Release `0.1.0`: `release/0.1.0`, changelog, tag `v0.1.0`, signed macOS build
 
@@ -107,6 +106,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-02** — Stage 2, first part: saved hosts (domain, use cases, `hosts.json`, commands), hosts screen, host drawer and session tabs. `bun run check:full` passes (46 UI tests, Rust unit and integration tests). Checked in the browser pane with an in-memory core: add, list, connect (opens a tab), close tab, edit, delete. Fixed there: card lost its faber-ui styles (`as` vs `forwardedAs`), clipped New host button, drawer title flipping while closing. The native-window check is still pending: Computer use is not enabled in this session.
 - **2026-11-02** — Desktop commands and the Stage 1 UI landed: connect form, host key dialogs, `xterm.js` terminal. 11 Rust tests for the contract and 28 UI tests pass; the form and error display were checked in the browser. The native window flow still needs a manual check.
 - **2026-11-02** — Sessions core done: domain values, use cases with ports, `KnownHostsFile` and `RusshConnector` adapters. 8 integration tests pass against the Docker server (unknown/changed key, shell output, resize, exit status, user close, rejected login, unreachable server). Spike deleted.
 - **2026-11-02** — Source layout reorganized by layer under `src/` (`domain`, `application`, `infrastructure`, `presentation/{desktop,ui}`); UI simplified to gateway + hooks + components per context (ADR-0011). All checks pass and the app launches from the new layout.
