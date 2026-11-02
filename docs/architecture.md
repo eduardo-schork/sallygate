@@ -161,7 +161,7 @@ Things the UI needs that faber-ui does not offer yet. Each is a local stand-in u
 4. `OpenSession` asks the `SshConnector` port to connect, passing the `KnownHosts` port and a `SessionOutput` that writes to the channel.
 5. `RusshConnector` connects; `ServerKeyCheck` asks `KnownHosts` about the server key:
    - trusted → it authenticates with the key file or password, opens a PTY and a shell, and returns a live session;
-   - a needed secret is missing (password host, encrypted key) → it fails with `secretRequired` before dialing; the UI asks for it and opens again ([ADR-0015](decisions/0015-secrets-typed-at-connect-time.md));
+   - a needed secret is missing (password host, encrypted key) → it fails with `secretRequired`; the UI asks for it and opens again ([ADR-0015](decisions/0015-secrets-typed-at-connect-time.md));
    - unknown or changed → no session; the error carries the key, the UI asks the user, and on trust calls `trust_host_key` and opens again ([ADR-0014](decisions/0014-confirm-unknown-host-keys-before-connecting.md)).
 6. The use case registers the session in `SessionRegistry` and returns its `SessionId`. Output streams through the channel; `session-output-buffer.ts` keeps it until the terminal mounts.
 7. Keystrokes go back through `write_to_session`, size changes through `resize_session`, and closing the tab calls `close_session`. If the shell exits or the connection drops on its own, the session sends `exited` or `disconnected` and leaves the registry.

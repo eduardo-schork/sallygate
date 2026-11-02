@@ -161,4 +161,26 @@ describe('useConnection', () => {
 
     expect(sessions.closeSession).toHaveBeenCalledWith('late-session');
   });
+
+  it('SHOULD ask for a missing password and send it with one request only', async () => {
+    const openSession = vi
+      .fn<TOpenSession>()
+      .mockRejectedValueOnce({ kind: 'secretRequired', message: 'needed' })
+      .mockResolvedValueOnce('session-1');
+    const { result } = renderHook(() =>
+      useConnection(request, { sessions: inMemorySessions(openSession), trust: inMemoryTrust() }),
+    );
+
+    await act(() => result.current.connect(request));
+    expect(result.current.state).toMatchObject({ status: 'askingSecret' });
+
+    await act(() => result.current.connectWithSecret('hunter2'));
+
+    expect(openSession).toHaveBeenLastCalledWith(
+      { ...request, secret: 'hunter2' },
+      expect.anything(),
+    );
+    expect(result.current.state).toMatchObject({ status: 'connected' });
+    expect(JSON.stringify(result.current.state.request)).not.toContain('hunter2');
+  });
 });

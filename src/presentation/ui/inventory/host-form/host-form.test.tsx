@@ -41,4 +41,35 @@ describe('HostForm', () => {
 
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ id: 'host-1', label: 'web' }));
   });
+
+  it('SHOULD save a password host without asking for the password', () => {
+    const onSubmit = vi.fn();
+    render(<HostForm formId="host-form" onSubmit={onSubmit} />);
+
+    fireEvent.click(screen.getByLabelText('Password'));
+    fireEvent.submit(screen.getByRole('form', { name: 'New host' }));
+
+    expect(screen.queryByLabelText('Private key')).toBeNull();
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ auth: { type: 'password' } }));
+  });
+
+  it('SHOULD keep the sign-in method of a saved password host', () => {
+    const onSubmit = vi.fn();
+    render(
+      <HostForm
+        formId="host-form"
+        host={{
+          id: 'host-1',
+          label: 'home',
+          endpoint: { address: 'home.lan', port: 22, username: 'me' },
+          auth: { type: 'password' },
+        }}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    fireEvent.submit(screen.getByRole('form', { name: 'Edit host' }));
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ auth: { type: 'password' } }));
+  });
 });

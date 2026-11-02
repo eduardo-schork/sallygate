@@ -1,9 +1,20 @@
-import { Field, FLEX_ALIGNS, HFlex, Input, VFlex } from '@faber-ui/react';
+import {
+  Field,
+  FLEX_ALIGNS,
+  HFlex,
+  Input,
+  Segment,
+  SegmentedControl,
+  Text,
+  VFlex,
+} from '@faber-ui/react';
 import { type SubmitEvent, useState } from 'react';
 
 import { DEFAULT_KEY_FILE_PATH, DEFAULT_SSH_PORT } from './host-form.constants';
 import { AddressField } from './host-form.styles';
 import type { THostFormProps } from './host-form.types';
+
+type TAuthType = 'keyFile' | 'password';
 
 /** Everything Sallygate needs to reach a server. Validation happens in the core. */
 export function HostForm({ host, formId, onSubmit }: THostFormProps) {
@@ -12,6 +23,7 @@ export function HostForm({ host, formId, onSubmit }: THostFormProps) {
   const [address, setAddress] = useState(host?.endpoint.address ?? '');
   const [port, setPort] = useState(String(host?.endpoint.port ?? DEFAULT_SSH_PORT));
   const [username, setUsername] = useState(host?.endpoint.username ?? '');
+  const [authType, setAuthType] = useState<TAuthType>(host?.auth.type ?? 'keyFile');
   const [keyFilePath, setKeyFilePath] = useState(
     host?.auth.type === 'keyFile' ? host.auth.path : DEFAULT_KEY_FILE_PATH,
   );
@@ -23,7 +35,7 @@ export function HostForm({ host, formId, onSubmit }: THostFormProps) {
       label,
       group,
       endpoint: { address, port: Number(port), username },
-      auth: { type: 'keyFile', path: keyFilePath },
+      auth: authType === 'keyFile' ? { type: 'keyFile', path: keyFilePath } : { type: 'password' },
     });
   };
 
@@ -80,19 +92,43 @@ export function HostForm({ host, formId, onSubmit }: THostFormProps) {
             required
           />
         </Field>
-        <Field
-          label="Private key"
-          description="A key file without a passphrase, for example ~/.ssh/id_ed25519"
-        >
-          <Input
-            name="keyFilePath"
-            value={keyFilePath}
-            onChange={(event) => setKeyFilePath(event.target.value)}
-            autoComplete="off"
-            spellCheck={false}
-            required
-          />
-        </Field>
+        <SegmentedControl label="Sign in with">
+          <Segment
+            name="authType"
+            value="keyFile"
+            checked={authType === 'keyFile'}
+            onChange={() => setAuthType('keyFile')}
+          >
+            Key file
+          </Segment>
+          <Segment
+            name="authType"
+            value="password"
+            checked={authType === 'password'}
+            onChange={() => setAuthType('password')}
+          >
+            Password
+          </Segment>
+        </SegmentedControl>
+        {authType === 'keyFile' ? (
+          <Field
+            label="Private key"
+            description="For example ~/.ssh/id_ed25519. If it has a passphrase, you type it when you connect."
+          >
+            <Input
+              name="keyFilePath"
+              value={keyFilePath}
+              onChange={(event) => setKeyFilePath(event.target.value)}
+              autoComplete="off"
+              spellCheck={false}
+              required
+            />
+          </Field>
+        ) : (
+          <Text.Small>
+            You type the password each time you connect. Sallygate never saves it.
+          </Text.Small>
+        )}
       </VFlex>
     </form>
   );

@@ -27,6 +27,7 @@ export type TConnectionState =
       readonly request: TOpenSessionRequest;
       readonly hostKey: THostKey;
     }
+  | { readonly status: 'askingSecret'; readonly request: TOpenSessionRequest }
   | {
       readonly status: 'failed';
       readonly request: TOpenSessionRequest;
@@ -48,6 +49,7 @@ type TConnectionGateways = {
 /**
  * One terminal connection: opening it, the server key decision, its output and its end.
  * The session closes when the component using this hook unmounts (its tab closes).
+ * A password or passphrase goes to the core with one request and is never kept (ADR-0015).
  */
 export function useConnection(
   initialRequest: TOpenSessionRequest,
@@ -72,7 +74,7 @@ export function useConnection(
   }, [sessions]);
 
   const connect = useCallback(
-    async (request: TOpenSessionRequest) => {
+    async (request: TOpenSessionRequest, secret?: string) => {
       setState({ status: 'connecting', request });
       const output = createSessionOutputBuffer();
       // An object, so the event handler and the code below share the flag.
@@ -89,7 +91,10 @@ export function useConnection(
       };
 
       try {
-        const sessionId = await sessions.openSession(request, onEvent);
+        const sessionId = await sessions.openSession(
+          secret === undefined ? request : { ...request, secret },
+          onEvent,
+        );
         if (!isMounted.current) {
           // The tab closed while connecting: nobody will use this session.
           void sessions.closeSession(sessionId).catch(() => undefined);
@@ -103,6 +108,8 @@ export function useConnection(
         const error = toCommandError(rejection);
         if (error.kind === 'unknownHostKey' && error.hostKey) {
           setState({ status: 'confirmingHostKey', request, hostKey: error.hostKey });
+        } else if (error.kind === 'secretRequired') {
+          setState({ status: 'askingSecret', request });
         } else if (error.kind === 'hostKeyChanged' && error.hostKey) {
           setState({ status: 'hostKeyChanged', request, hostKey: error.hostKey });
         } else {
@@ -127,6 +134,15 @@ export function useConnection(
     }
     await connect(request);
   }, [connect, state, trust]);
+
+  const connectWithSecret = useCallback(
+    async (secret: string) => {
+      if (state.status === 'askingSecret') {
+        await connect(state.request, secret);
+      }
+    },
+    [connect, state],
+  );
 
   /** Leaves a pending decision or failure without connecting. */
   const dismiss = useCallback(() => {
@@ -156,5 +172,13 @@ export function useConnection(
     [sessionId, sessions],
   );
 
-  return { state, connect, trustHostKeyAndConnect, dismiss, sendInput, resize };
+  return {
+    state,
+    connect,
+    trustHostKeyAndConnect,
+    connectWithSecret,
+    dismiss,
+    sendInput,
+    resize,
+  };
 }

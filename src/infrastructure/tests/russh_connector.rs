@@ -246,6 +246,7 @@ async fn logs_in_with_a_password() {
 #[ignore = "needs the SSH test server: scripts/test-ssh-server.sh up"]
 async fn asks_for_a_password_it_was_not_given() {
     let server = TestServer::new();
+    server.trusted_session().await;
 
     let (result, _) = server
         .connect_with("sallygate", TEST_SERVER_PORT, AuthMethod::Password, None)

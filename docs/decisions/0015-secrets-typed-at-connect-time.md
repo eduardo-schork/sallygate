@@ -13,7 +13,7 @@ A password or key passphrase is typed in a password field when a session opens, 
 
 - A host stores only its auth method: a key file path, or "password".
 - The core keeps the secret in a `Secret` value that redacts itself in `Debug` and is zeroized when dropped.
-- When the core needs a secret it was not given (a password host, or an encrypted key), it fails with `secretRequired`; the UI asks for it and opens the session again, like the host key flow in [ADR-0014](0014-confirm-unknown-host-keys-before-connecting.md).
+- When the core needs a secret it was not given (a password host, or an encrypted key), it fails with `secretRequired` after the server key check (so a first connection asks about the key first and the secret is typed once); the UI asks for it and opens the session again, like the host key flow in [ADR-0014](0014-confirm-unknown-host-keys-before-connecting.md).
 
 ## Alternatives considered
 

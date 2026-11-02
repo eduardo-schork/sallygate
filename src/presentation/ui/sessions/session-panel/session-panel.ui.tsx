@@ -15,6 +15,7 @@ import { formatEndpoint } from '../../shared/format-endpoint';
 import { ChangedHostKeyDialog } from '../../trust/changed-host-key-dialog';
 import { UnknownHostKeyDialog } from '../../trust/unknown-host-key-dialog';
 import { CONNECTION_ERROR_COPY } from '../connection-error-copy';
+import { SecretDialog } from '../secret-dialog';
 import { SessionEndedNotice } from '../session-ended-notice';
 import { TerminalView } from '../terminal-view';
 import { useConnection } from '../use-connection';
@@ -23,7 +24,7 @@ import type { TSessionPanelProps } from './session-panel.types';
 
 /** One tab's session: it connects when the tab opens and closes when the tab closes. */
 export function SessionPanel({ request, isActive, onCloseTab }: TSessionPanelProps) {
-  const { state, connect, trustHostKeyAndConnect, dismiss, sendInput, resize } =
+  const { state, connect, trustHostKeyAndConnect, connectWithSecret, dismiss, sendInput, resize } =
     useConnection(request);
   const serverLabel = formatEndpoint(request.endpoint);
 
@@ -76,6 +77,7 @@ export function SessionPanel({ request, isActive, onCloseTab }: TSessionPanelPro
 
       {state.status === 'idle' ||
       state.status === 'confirmingHostKey' ||
+      state.status === 'askingSecret' ||
       state.status === 'hostKeyChanged' ? (
         <SessionPanelMessage>
           <EmptyState
@@ -102,6 +104,13 @@ export function SessionPanel({ request, isActive, onCloseTab }: TSessionPanelPro
         serverLabel={serverLabel}
         hostKey={state.status === 'confirmingHostKey' ? state.hostKey : undefined}
         onTrust={() => void trustHostKeyAndConnect()}
+        onCancel={dismiss}
+      />
+      <SecretDialog
+        open={isActive && state.status === 'askingSecret'}
+        serverLabel={serverLabel}
+        auth={request.auth}
+        onSubmit={(secret) => void connectWithSecret(secret)}
         onCancel={dismiss}
       />
       <ChangedHostKeyDialog

@@ -26,7 +26,7 @@ export const CONNECTION_ERROR_COPY: Record<TCommandErrorKind, TErrorCopy> = {
   },
   keyFileUnreadable: {
     title: 'Could not read the private key',
-    hint: 'Check the path, and that the file is a private key.',
+    hint: 'Check the path and, if the key has one, the passphrase.',
   },
   unreachable: {
     title: 'Could not reach the server',
