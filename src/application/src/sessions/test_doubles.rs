@@ -80,6 +80,10 @@ impl LiveSession for FakeLiveSession {
         Ok(())
     }
 
+    async fn open_files(&self) -> Result<Arc<dyn crate::transfer::RemoteFiles>, LiveSessionError> {
+        Err(LiveSessionError("no files in this fake".to_owned()))
+    }
+
     async fn close(&self) -> Result<(), LiveSessionError> {
         self.0.lock().unwrap().is_closed = true;
         Ok(())

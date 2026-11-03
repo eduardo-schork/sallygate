@@ -306,3 +306,59 @@ async fn reports_an_unreachable_server() {
 
     assert!(matches!(result, Err(OpenSessionError::Unreachable(_))));
 }
+
+struct IgnoreProgress;
+
+impl sallygate_application::transfer::TransferProgress for IgnoreProgress {
+    fn advanced(&self, _done_bytes: u64, _total_bytes: u64) {}
+}
+
+#[tokio::test]
+#[ignore = "needs the SSH test server: scripts/test-ssh-server.sh up"]
+async fn browses_and_copies_files_over_the_session_connection() {
+    use sallygate_domain::transfer::EntryKind;
+
+    let server = TestServer::new();
+    let (session, _) = server.trusted_session().await;
+    let files = session.open_files().await.unwrap();
+    let home = files.home().await.unwrap();
+    let folder = format!("{home}/sftp-test-{}", std::process::id());
+    let local = tempfile::tempdir().unwrap();
+    let original = local.path().join("hello.txt");
+    std::fs::write(&original, "hello over sftp").unwrap();
+
+    files.make_folder(&folder).await.unwrap();
+    let remote_file = format!("{folder}/hello.txt");
+    files
+        .upload(&original, &remote_file, Arc::new(IgnoreProgress))
+        .await
+        .unwrap();
+    let listed = files.list(&folder).await.unwrap();
+    assert_eq!(listed.len(), 1);
+    assert_eq!(listed[0].name, "hello.txt");
+    assert_eq!(listed[0].size_bytes, 15);
+
+    let downloaded = files
+        .download(&remote_file, local.path(), Arc::new(IgnoreProgress))
+        .await
+        .unwrap();
+    assert_eq!(downloaded, local.path().join("hello (1).txt"));
+    assert_eq!(
+        std::fs::read_to_string(downloaded).unwrap(),
+        "hello over sftp"
+    );
+
+    let renamed = format!("{folder}/renamed.txt");
+    files.rename(&remote_file, &renamed).await.unwrap();
+    files.remove(&renamed, EntryKind::File).await.unwrap();
+    files.remove(&folder, EntryKind::Folder).await.unwrap();
+    assert!(
+        !files
+            .list(&home)
+            .await
+            .unwrap()
+            .iter()
+            .any(|entry| entry.path == folder)
+    );
+    session.close().await.unwrap();
+}

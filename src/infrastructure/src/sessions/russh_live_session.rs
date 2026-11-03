@@ -3,10 +3,13 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use async_trait::async_trait;
 use russh::{ChannelMsg, ChannelReadHalf, ChannelWriteHalf, Disconnect, client};
+use russh_sftp::client::SftpSession;
 use sallygate_application::sessions::{LiveSession, LiveSessionError, SessionOutput};
+use sallygate_application::transfer::RemoteFiles;
 use sallygate_domain::sessions::{SessionEnd, TerminalSize};
 
 use super::server_key_check::ServerKeyCheck;
+use crate::transfer::SftpRemoteFiles;
 
 /// One shell over one SSH connection. Output is read by a background task.
 pub(super) struct RusshLiveSession {
@@ -86,6 +89,22 @@ impl LiveSession for RusshLiveSession {
             .window_change(u32::from(size.columns()), u32::from(size.rows()), 0, 0)
             .await
             .map_err(|error| session_error(&error))
+    }
+
+    async fn open_files(&self) -> Result<Arc<dyn RemoteFiles>, LiveSessionError> {
+        let channel = self
+            .connection
+            .channel_open_session()
+            .await
+            .map_err(|error| session_error(&error))?;
+        channel
+            .request_subsystem(true, "sftp")
+            .await
+            .map_err(|error| session_error(&error))?;
+        let sftp = SftpSession::new(channel.into_stream())
+            .await
+            .map_err(|error| LiveSessionError(error.to_string()))?;
+        Ok(Arc::new(SftpRemoteFiles::new(sftp)))
     }
 
     async fn close(&self) -> Result<(), LiveSessionError> {

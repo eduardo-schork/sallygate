@@ -4,4 +4,5 @@
 pub mod credentials;
 pub mod inventory;
 pub mod sessions;
+pub mod transfer;
 pub mod trust;

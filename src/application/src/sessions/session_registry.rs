@@ -17,18 +17,18 @@ impl SessionRegistry {
         Self::default()
     }
 
-    pub(super) fn add(&self, session_id: SessionId, session: Arc<dyn LiveSession>) {
+    pub(crate) fn add(&self, session_id: SessionId, session: Arc<dyn LiveSession>) {
         self.lock().insert(session_id, session);
     }
 
-    pub(super) fn remove(&self, session_id: SessionId) -> Option<Arc<dyn LiveSession>> {
+    pub(crate) fn remove(&self, session_id: SessionId) -> Option<Arc<dyn LiveSession>> {
         self.lock().remove(&session_id)
     }
 
-    pub(super) fn get(
-        &self,
-        session_id: SessionId,
-    ) -> Result<Arc<dyn LiveSession>, SessionCommandError> {
+    /// # Errors
+    ///
+    /// Returns an error when no open session has this id.
+    pub fn get(&self, session_id: SessionId) -> Result<Arc<dyn LiveSession>, SessionCommandError> {
         self.lock()
             .get(&session_id)
             .cloned()

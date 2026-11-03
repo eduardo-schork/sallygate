@@ -1,6 +1,10 @@
+use std::sync::Arc;
+
 use async_trait::async_trait;
 use sallygate_domain::sessions::TerminalSize;
 use thiserror::Error;
+
+use crate::transfer::RemoteFiles;
 
 /// Port: one open terminal on a remote server.
 #[async_trait]
@@ -10,6 +14,9 @@ pub trait LiveSession: Send + Sync {
 
     /// Tells the remote shell the terminal changed size.
     async fn resize(&self, size: TerminalSize) -> Result<(), LiveSessionError>;
+
+    /// Opens the server's files (SFTP) over this session's connection.
+    async fn open_files(&self) -> Result<Arc<dyn RemoteFiles>, LiveSessionError>;
 
     /// Closes the session and its connection.
     async fn close(&self) -> Result<(), LiveSessionError>;
