@@ -9,10 +9,10 @@ The step-by-step plan for building Sallygate, and the place where progress is tr
 - **Stage:** 2 — Hosts and tabs. Saved hosts, the host drawer and session tabs are built and checked in the native window.
 - **What works today:** save, edit and delete hosts in groups (`hosts.json`); search; connect with a private key file (passphrase typed at connect time) or a password typed at connect time, never saved; confirm an unknown server key, block a changed one; a resizable terminal per tab; several tabs at once; closing a tab closes its session.
 - **Next tasks, in order:**
-  1. The owner tries password and passphrase login on a real server; then a native-window check of the password dialog.
+  1. Native-window check of the password dialog (test server, `127.0.0.1:2222`).
   2. Import `~/.ssh/config` into saved hosts.
   3. The owner uses it daily for a week, then `release/0.1.0`.
-- **Owner to do:** try the app on their own server (and `exit` from a shell); push `develop` and make it the default branch; register `sallygate.com`; reserve the `sallygate` crate.
+- **Owner to do:** `exit` from a shell on their server; make `develop` the default branch on GitHub; register `sallygate.com`; reserve the `sallygate` crate.
 - **Open questions:** see [architecture.md](architecture.md#open-questions).
 - **Known shortcuts:** the terminal uses the system monospace font until faber-ui has a mono token (`grep -rn "shortcut:" src`).
 - **Blocked on:** nothing.
@@ -116,6 +116,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-02** — The owner connected to their own cloud server from the app with a key file. Not checked yet: `exit` from the shell, password login on a real server.
 - **2026-11-02** — Password UI: the host drawer chooses key file or password; a `SecretDialog` asks for a missing password or passphrase and sends it with one `open_session` call only. The core now checks the secret after the server key, so a first connection asks about the key first and the password is typed once. 51 UI tests and 11 integration tests pass. Not checked in the native window.
 - **2026-11-02** — Password login and key passphrases in the core: `AuthMethod::Password`, a `Secret` value (redacted, zeroized), `secretRequired` error, `TAuth` in the contract and `hosts.json`; typed at connect time and never saved (ADR-0015). Owner chose this over Keychain storage to reach their servers sooner. 3 new integration tests (password ok, missing, wrong) and passphrase unit tests pass; the UI still only offers key files.
 - **2026-11-02** — Handoff: _Current focus_ now lists what works, the next tasks in order, owner tasks and known shortcuts; the manual native-window check is written down in [conventions.md](conventions.md#tests); `/resume` (`.claude/skills/resume/`) brings a new session up to speed.
