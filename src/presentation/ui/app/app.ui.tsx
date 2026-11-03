@@ -10,6 +10,7 @@ import { SessionTabBar } from '../sessions/session-tab-bar';
 import { HOSTS_TAB_ID, useSessionTabs } from '../sessions/use-session-tabs';
 import type { TCommandError } from '../shared/command-error-contract';
 import { SnippetsView } from '../snippets/snippets-view';
+import { KnownHostsView } from '../trust/known-hosts-view';
 import { useSnippets } from '../snippets/use-snippets';
 import { AppSideNav, type TAppView } from './app-side-nav';
 import { AppRoot, HomePanel, HomeView } from './app.styles';
@@ -91,6 +92,7 @@ export function App() {
               onDelete={snippets.deleteSnippet}
             />
           ) : null}
+          {view === 'knownHosts' ? <KnownHostsView /> : null}
         </HomeView>
       </HomePanel>
       {tabs.map((tab) => (

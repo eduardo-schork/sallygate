@@ -4,4 +4,4 @@
 pub mod commands;
 mod contract;
 
-pub use contract::{HostKeyDto, TrustHostKeyRequest};
+pub use contract::{HostKeyDto, KnownHostDto, TrustHostKeyRequest};

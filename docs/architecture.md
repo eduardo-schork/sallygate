@@ -75,7 +75,7 @@ src/
 │       ├── inventory/          host.rs, host_id.rs, host_label.rs, group_name.rs,
 │       │                       host_address.rs, port.rs, username.rs, ssh_endpoint.rs
 │       ├── credentials/        auth_method.rs, key_file_path.rs, secret.rs
-│       ├── trust/              host_key.rs, host_key_status.rs
+│       ├── trust/              host_key.rs, host_key_status.rs, known_host_entry.rs
 │       ├── transfer/           remote_entry.rs (entries, path helpers)
 │       ├── snippets/           snippet.rs (id, name, command)
 │       └── sessions/           session_id.rs, terminal_size.rs, session_end.rs
@@ -83,7 +83,7 @@ src/
 │   └── src/
 │       ├── inventory/          list_hosts.rs, save_host.rs, delete_host.rs, import_ssh_config.rs;
 │       │                       ports: host_repository.rs, ssh_config_source.rs
-│       ├── trust/              trust_host_key.rs; known_hosts.rs (port)
+│       ├── trust/              trust_host_key.rs, manage_known_hosts.rs; known_hosts.rs (port)
 │       ├── snippets/           manage_snippets.rs; snippet_repository.rs (port)
 │       ├── transfer/           browse_remote_files.rs, transfer_files.rs, open_file_systems.rs;
 │       │                       remote_files.rs (ports RemoteFiles, TransferProgress)
@@ -123,7 +123,8 @@ src/
         │                       snippet-input.ts, snippets-view/, snippet-dialog/, snippet-panel/
         ├── transfer/           transfer-gateway.ts, transfer-contract.ts (generated),
         │                       use-remote-files.ts, files-view/, name-dialog/
-        ├── trust/              trust-gateway.ts, trust-contract.ts (generated),
+        ├── trust/              trust-gateway.ts, trust-contract.ts (generated), use-known-hosts.ts,
+        │                       known-hosts-view/,
         │                       unknown-host-key-dialog/, changed-host-key-dialog/
         └── shared/             command-error.ts, command-error-contract.ts (generated),
                                 format-endpoint.ts

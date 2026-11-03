@@ -31,7 +31,11 @@ function inMemorySessions(openSession: TOpenSession): TSessionsGateway {
   };
 }
 
-const inMemoryTrust = (): TTrustGateway => ({ trustHostKey: vi.fn(() => Promise.resolve()) });
+const inMemoryTrust = (): TTrustGateway => ({
+  trustHostKey: vi.fn(() => Promise.resolve()),
+  listKnownHosts: () => Promise.resolve([]),
+  forgetKnownHost: () => Promise.resolve(),
+});
 
 // Tauri rejects with the plain error object the Rust command returned, not an Error.
 const rejectWith = (error: TCommandError) => vi.fn<TOpenSession>().mockRejectedValue(error);

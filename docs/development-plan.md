@@ -6,12 +6,12 @@ The step-by-step plan for building Sallygate, and the place where progress is tr
 
 ## Current focus
 
-- **Stage:** 4 — Power tools. Side menu and snippets are built; next: known hosts, SSH keys, port forwarding, jump host.
+- **Stage:** 4 — Power tools. Side menu, snippets and known hosts are built; next: SSH keys, port forwarding, jump host.
 - **What works today:** save, edit and delete hosts in groups (`hosts.json`); search; connect with a private key file (passphrase typed at connect time) or a password typed at connect time, never saved; import hosts from `~/.ssh/config`; browse a server's files from a session tab, upload, download, create, rename and delete; save snippets and send them to a terminal from its side panel; confirm an unknown server key, block a changed one; a resizable terminal per tab; several tabs at once; closing a tab closes its session.
 - **Next tasks, in order:**
   1. Owner: check the password dialog in the native window (background clicks cannot reach the webview).
   2. Owner: try the Files view on the Docker test server in the native window.
-  3. Stage 4, in order: known hosts screen, SSH keys screen, port forwarding, jump host.
+  3. Stage 4, in order: SSH keys screen, port forwarding, jump host.
   4. Cut `release/0.1.0` and `release/0.2.0` when the owner asks (no week-long trial).
 - **Owner to do:** `exit` from a shell on their server; make `develop` the default branch on GitHub; register `sallygate.com`; reserve the `sallygate` crate.
 - **Open questions:** see [architecture.md](architecture.md#open-questions).
@@ -102,7 +102,7 @@ Update this block whenever the focus moves.
 - [x] Snippets: `snippets` context (`snippets.json`), Snippets screen, panel beside the terminal that types a snippet and presses Enter
 - [ ] Port forwarding: local, remote and SOCKS rules with on/off switches
 - [ ] Jump host (`ProxyJump`)
-- [ ] Known hosts screen: review and remove trusted keys
+- [x] Known hosts screen: lists `~/.ssh/known_hosts` (hashed entries shown as hidden), forgets one line after confirming; refuses when the line moved since it was shown
 - [ ] Release `0.3.0`
 
 ## Stage 5 — Vault (1.0.0)
@@ -119,6 +119,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-03** — Known hosts screen: `KnownHosts` port gains `entries` and `forget` (exact line, refused if it moved), `ManageKnownHosts`, commands, screen in the side menu. `bun run check` passes (78 UI tests).
 - **2026-11-03** — Stage 4 starts: side menu and "Sallygate" home tab after the owner's prototype; snippets (domain, `ManageSnippets`, `JsonSnippetRepository`, commands, screen, terminal side panel). Shared `json_file` helper for atomic JSON writes. `bun run check` passes (77 UI tests). Checked in the browser pane with a mocked core.
 - **2026-11-03** — Stage 3 SFTP: `transfer` context over the session's connection (ADR-0017), Tauri commands with a progress channel, Files view with transfers. `bun run check:full` passes (69 UI tests; 12 integration tests, one new for SFTP). Test server: `PerSourcePenalties no`, since OpenSSH 10 penalized the tests' deliberate pre-login disconnects. Checked the Files view in the browser pane with a mocked core (list, open a folder, download progress).
 - **2026-11-03** — `~/.ssh/config` import: parser adapter, use case and button with a one-line result. Rust and UI tests pass (`bun run check`). The password dialog could not be checked in the native window: background clicks do not reach the Tauri webview; left to the owner.

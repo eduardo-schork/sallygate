@@ -38,6 +38,14 @@ impl KnownHosts for FakeKnownHosts {
     fn trust(&self, _: &SshEndpoint, _: &HostKey) -> Result<(), KnownHostsError> {
         Ok(())
     }
+
+    fn entries(&self) -> Result<Vec<sallygate_domain::trust::KnownHostEntry>, KnownHostsError> {
+        Ok(Vec::new())
+    }
+
+    fn forget(&self, _: &sallygate_domain::trust::KnownHostEntry) -> Result<(), KnownHostsError> {
+        Ok(())
+    }
 }
 
 #[derive(Default)]

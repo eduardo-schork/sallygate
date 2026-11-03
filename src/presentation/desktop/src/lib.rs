@@ -33,6 +33,8 @@ pub fn run() -> tauri::Result<()> {
             sessions::commands::resize_session,
             sessions::commands::close_session,
             trust::commands::trust_host_key,
+            trust::commands::list_known_hosts,
+            trust::commands::forget_known_host,
             snippets::commands::list_snippets,
             snippets::commands::save_snippet,
             snippets::commands::delete_snippet,

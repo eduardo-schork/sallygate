@@ -11,6 +11,19 @@ export type THostKey = { algorithm: string,
 fingerprint: string, opensshPublicKey: string, };
 
 /**
+ * One trusted key from `~/.ssh/known_hosts`. Sent back as is to forget it.
+ */
+export type TKnownHost = { 
+/**
+ * The line in the file, from 1.
+ */
+line: number, 
+/**
+ * The servers as written; missing when the file stores them hashed.
+ */
+hosts?: string, hostKey: THostKey, };
+
+/**
  * The user decided to trust this key for this server.
  */
 export type TTrustHostKeyRequest = { endpoint: TEndpoint, hostKey: THostKey, };

@@ -11,7 +11,7 @@ use sallygate_application::sessions::{
 };
 use sallygate_application::snippets::ManageSnippets;
 use sallygate_application::transfer::{BrowseRemoteFiles, OpenFileSystems, TransferFiles};
-use sallygate_application::trust::{KnownHosts, TrustHostKey};
+use sallygate_application::trust::{KnownHosts, ManageKnownHosts, TrustHostKey};
 use sallygate_infrastructure::inventory::{JsonHostRepository, SshConfigFile};
 use sallygate_infrastructure::sessions::RusshConnector;
 use sallygate_infrastructure::snippets::JsonSnippetRepository;
@@ -32,6 +32,7 @@ pub struct AppServices {
     pub browse_remote_files: BrowseRemoteFiles,
     pub transfer_files: TransferFiles,
     pub snippets: ManageSnippets,
+    pub known_hosts: ManageKnownHosts,
 }
 
 #[derive(Debug, Error)]
@@ -76,7 +77,8 @@ pub fn compose(app_data_folder: &Path) -> Result<AppServices, CompositionError> 
         write_to_session: WriteToSession::new(Arc::clone(&registry)),
         resize_session: ResizeSession::new(Arc::clone(&registry)),
         close_session: CloseSession::new(registry),
-        trust_host_key: TrustHostKey::new(known_hosts),
+        trust_host_key: TrustHostKey::new(Arc::clone(&known_hosts)),
+        known_hosts: ManageKnownHosts::new(known_hosts),
         browse_remote_files: BrowseRemoteFiles::new(Arc::clone(&file_systems)),
         transfer_files: TransferFiles::new(file_systems),
         snippets: ManageSnippets::new(Arc::new(JsonSnippetRepository::new(
