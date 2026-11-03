@@ -5,7 +5,7 @@ import { HOSTS_TAB_ID } from '../use-session-tabs';
 import { SessionTab, SessionTabBarRoot, SessionTabButton } from './session-tab-bar.styles';
 import type { TSessionTabBarProps } from './session-tab-bar.types';
 
-/** The hosts screen and one tab per open session, like browser tabs. */
+/** The Sallygate tab (hosts, snippets…) and one tab per open session, like browser tabs. */
 export function SessionTabBar({ tabs, activeTabId, onSelect, onClose }: TSessionTabBarProps) {
   return (
     <SessionTabBarRoot role="tablist" aria-label="Open tabs">
@@ -15,7 +15,7 @@ export function SessionTabBar({ tabs, activeTabId, onSelect, onClose }: TSession
           aria-selected={activeTabId === HOSTS_TAB_ID}
           onClick={() => onSelect(HOSTS_TAB_ID)}
         >
-          Hosts
+          Sallygate
         </SessionTabButton>
       </SessionTab>
       {tabs.map((tab) => (

@@ -4,5 +4,6 @@
 pub mod credentials;
 pub mod inventory;
 pub mod sessions;
+pub mod snippets;
 pub mod transfer;
 pub mod trust;

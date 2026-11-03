@@ -5,6 +5,7 @@ import styled from 'styled-components';
 export const TerminalViewRoot = styled.div`
   flex: 1;
   min-block-size: 0;
+  min-inline-size: 0;
   padding: ${SPACINGS.SM};
   background-color: ${COLORS.BACKGROUND_PRIMARY};
 

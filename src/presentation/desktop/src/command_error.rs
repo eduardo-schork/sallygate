@@ -44,6 +44,7 @@ pub enum CommandErrorKind {
     SessionFailed,
     FilesUnavailable,
     FileOperationFailed,
+    SnippetStoreUnavailable,
 }
 
 impl CommandError {

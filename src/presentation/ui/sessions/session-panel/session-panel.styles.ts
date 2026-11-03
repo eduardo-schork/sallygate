@@ -19,12 +19,14 @@ export const SessionPanelMessage = styled(CenterFlex)`
 /** Switches a connected tab between its terminal and its files. */
 export const SessionViewBar = styled(HFlex)`
   flex: none;
+  align-items: center;
+  justify-content: space-between;
   padding: ${SPACINGS.XS} ${SPACINGS.MD};
   border-block-end: ${BORDER_WIDTHS.DEFAULT} solid ${COLORS.BORDER_DEFAULT};
 `;
 
 /** The terminal or the files; the one not shown stays mounted so it keeps its state. */
-export const SessionView = styled(VFlex)`
+export const SessionView = styled(HFlex)`
   flex: 1;
   min-block-size: 0;
 

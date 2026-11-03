@@ -14,6 +14,8 @@ import {
 import { useEffect, useRef, useState } from 'react';
 
 import { formatEndpoint } from '../../shared/format-endpoint';
+import { SnippetPanel } from '../../snippets/snippet-panel';
+import { snippetInput } from '../../snippets/snippet-input';
 import { FilesView } from '../../transfer/files-view';
 import { ChangedHostKeyDialog } from '../../trust/changed-host-key-dialog';
 import { UnknownHostKeyDialog } from '../../trust/unknown-host-key-dialog';
@@ -31,13 +33,14 @@ import {
 import type { TSessionPanelProps } from './session-panel.types';
 
 /** One tab's session: it connects when the tab opens and closes when the tab closes. */
-export function SessionPanel({ request, isActive, onCloseTab }: TSessionPanelProps) {
+export function SessionPanel({ request, isActive, onCloseTab, snippets }: TSessionPanelProps) {
   const { state, connect, trustHostKeyAndConnect, connectWithSecret, dismiss, sendInput, resize } =
     useConnection(request);
   const serverLabel = formatEndpoint(request.endpoint);
   const [view, setView] = useState<'terminal' | 'files'>('terminal');
   // The file browser opens its SFTP channel only once the user first asks for files.
   const [hasOpenedFiles, setHasOpenedFiles] = useState(false);
+  const [isSnippetPanelOpen, setIsSnippetPanelOpen] = useState(true);
   const showView = (next: 'terminal' | 'files') => {
     setView(next);
     if (next === 'files') {
@@ -86,9 +89,26 @@ export function SessionPanel({ request, isActive, onCloseTab }: TSessionPanelPro
                 Files
               </Segment>
             </SegmentedControl>
+            {view === 'terminal' ? (
+              <Button
+                size="small"
+                variant="subtle"
+                color="neutral"
+                aria-pressed={isSnippetPanelOpen}
+                onClick={() => setIsSnippetPanelOpen((isOpen) => !isOpen)}
+              >
+                {isSnippetPanelOpen ? 'Hide snippets' : 'Show snippets'}
+              </Button>
+            ) : null}
           </SessionViewBar>
           <SessionView hidden={view !== 'terminal'}>
             <TerminalView output={state.output} onInput={sendInput} onResize={resize} />
+            {isSnippetPanelOpen ? (
+              <SnippetPanel
+                snippets={snippets}
+                onRun={(snippet) => sendInput(snippetInput(snippet.command))}
+              />
+            ) : null}
           </SessionView>
           {hasOpenedFiles ? (
             <SessionView hidden={view !== 'files'}>

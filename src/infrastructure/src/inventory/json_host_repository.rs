@@ -1,5 +1,3 @@
-use std::fs;
-use std::io::ErrorKind;
 use std::path::PathBuf;
 use std::sync::{Mutex, PoisonError};
 
@@ -9,6 +7,8 @@ use sallygate_domain::inventory::{
     GroupName, Host, HostAddress, HostId, HostLabel, Port, SshEndpoint, Username,
 };
 use serde::{Deserialize, Serialize};
+
+use crate::json_file;
 
 /// The file format version; bump it and migrate when the shape changes.
 const FORMAT_VERSION: u32 = 1;
@@ -30,33 +30,19 @@ impl JsonHostRepository {
     }
 
     fn read_file(&self) -> Result<Vec<Host>, HostStoreError> {
-        let contents = match fs::read_to_string(&self.path) {
-            Ok(contents) => contents,
-            Err(error) if error.kind() == ErrorKind::NotFound => return Ok(Vec::new()),
-            Err(error) => return Err(HostStoreError::Read(error.to_string())),
+        let Some(file) = json_file::read::<HostsFile>(&self.path).map_err(HostStoreError::Read)?
+        else {
+            return Ok(Vec::new());
         };
-        let file: HostsFile = serde_json::from_str(&contents)
-            .map_err(|error| HostStoreError::Read(error.to_string()))?;
-
         file.hosts.into_iter().map(HostRecord::into_host).collect()
     }
 
-    /// Writes to a temporary file first, so a crash mid-write never leaves a broken file.
     fn write_file(&self, hosts: &[Host]) -> Result<(), HostStoreError> {
         let file = HostsFile {
             version: FORMAT_VERSION,
             hosts: hosts.iter().map(HostRecord::from_host).collect(),
         };
-        let contents = serde_json::to_string_pretty(&file)
-            .map_err(|error| HostStoreError::Write(error.to_string()))?;
-        let write_error = |error: std::io::Error| HostStoreError::Write(error.to_string());
-
-        if let Some(folder) = self.path.parent() {
-            fs::create_dir_all(folder).map_err(write_error)?;
-        }
-        let temporary_path = self.path.with_extension("json.tmp");
-        fs::write(&temporary_path, contents).map_err(write_error)?;
-        fs::rename(&temporary_path, &self.path).map_err(write_error)
+        json_file::write_atomically(&self.path, &file).map_err(HostStoreError::Write)
     }
 
     fn lock(&self) -> std::sync::MutexGuard<'_, ()> {
@@ -171,6 +157,8 @@ impl HostRecord {
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
+
     use super::*;
 
     fn host(label: &str, group: Option<&str>) -> Host {

@@ -9,15 +9,20 @@ import { createSessionRequest } from '../sessions/session-request';
 import { SessionTabBar } from '../sessions/session-tab-bar';
 import { HOSTS_TAB_ID, useSessionTabs } from '../sessions/use-session-tabs';
 import type { TCommandError } from '../shared/command-error-contract';
-import { AppRoot, HostsPanel } from './app.styles';
+import { SnippetsView } from '../snippets/snippets-view';
+import { useSnippets } from '../snippets/use-snippets';
+import { AppSideNav, type TAppView } from './app-side-nav';
+import { AppRoot, HomePanel, HomeView } from './app.styles';
 
 // The host stays while the drawer closes, so its title and fields do not flip mid-animation.
 type TDrawerState = { readonly isOpen: boolean; readonly host?: THost | undefined };
 
-/** The window: tabs on top, the hosts screen or a session below. */
+/** The window: tabs on top; below, the Sallygate tab (side menu and a screen) or a session. */
 export function App() {
   const { hosts, isLoading, loadError, saveHost, deleteHost, importSshConfig } = useHosts();
   const { tabs, activeTabId, openTab, closeTab, selectTab } = useSessionTabs();
+  const snippets = useSnippets();
+  const [view, setView] = useState<TAppView>('hosts');
   const [drawer, setDrawer] = useState<TDrawerState>({ isOpen: false });
   const [isSaving, setIsSaving] = useState(false);
   const [drawerError, setDrawerError] = useState<TCommandError>();
@@ -63,22 +68,37 @@ export function App() {
         onSelect={selectTab}
         onClose={closeTab}
       />
-      <HostsPanel hidden={activeTabId !== HOSTS_TAB_ID}>
-        <HostsView
-          hosts={hosts}
-          isLoading={isLoading}
-          loadError={loadError}
-          onNewHost={() => openDrawer()}
-          onConnect={connectTo}
-          onEdit={openDrawer}
-          onImportSshConfig={importSshConfig}
-        />
-      </HostsPanel>
+      <HomePanel hidden={activeTabId !== HOSTS_TAB_ID}>
+        <AppSideNav current={view} onNavigate={setView} />
+        <HomeView>
+          {view === 'hosts' ? (
+            <HostsView
+              hosts={hosts}
+              isLoading={isLoading}
+              loadError={loadError}
+              onNewHost={() => openDrawer()}
+              onConnect={connectTo}
+              onEdit={openDrawer}
+              onImportSshConfig={importSshConfig}
+            />
+          ) : null}
+          {view === 'snippets' ? (
+            <SnippetsView
+              snippets={snippets.snippets}
+              isLoading={snippets.isLoading}
+              loadError={snippets.error}
+              onSave={snippets.saveSnippet}
+              onDelete={snippets.deleteSnippet}
+            />
+          ) : null}
+        </HomeView>
+      </HomePanel>
       {tabs.map((tab) => (
         <SessionPanel
           key={tab.id}
           request={tab.request}
           isActive={activeTabId === tab.id}
+          snippets={snippets.snippets}
           onCloseTab={() => closeTab(tab.id)}
         />
       ))}

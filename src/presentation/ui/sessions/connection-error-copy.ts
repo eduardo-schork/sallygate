@@ -64,4 +64,8 @@ export const CONNECTION_ERROR_COPY: Record<TCommandErrorKind, TErrorCopy> = {
     title: 'The file operation failed',
     hint: 'Check the permissions of the file or folder on the server.',
   },
+  snippetStoreUnavailable: {
+    title: 'Could not use the saved snippets',
+    hint: 'Sallygate keeps them in its data folder; check that it can be read and written.',
+  },
 };

@@ -60,7 +60,7 @@ Enforced by the compiler (each Rust layer is its own crate and can only use what
 | `inventory`   | Saved hosts and their groups; `~/.ssh/config` import; later tags                                    | Built (0.1.0): hosts, groups by name, import from `~/.ssh/config`                                                          |
 | `transfer`    | SFTP browsing and the transfer queue                                                                | Built (0.2.0): browse, create, rename, delete, upload and download with progress, over the session's connection (ADR-0017) |
 | `tunnels`     | Local, remote and dynamic port forwarding                                                           | Planned (0.3.0)                                                                                                            |
-| `snippets`    | Saved commands sent to sessions                                                                     | Planned (0.3.0)                                                                                                            |
+| `snippets`    | Saved commands sent to sessions                                                                     | Built (0.3.0): `snippets.json`, screen, panel beside the terminal                                                          |
 
 Contexts talk to each other only through application-layer interfaces (a use case or a port), never by reaching into another context's domain internals.
 
@@ -77,12 +77,14 @@ src/
 │       ├── credentials/        auth_method.rs, key_file_path.rs, secret.rs
 │       ├── trust/              host_key.rs, host_key_status.rs
 │       ├── transfer/           remote_entry.rs (entries, path helpers)
+│       ├── snippets/           snippet.rs (id, name, command)
 │       └── sessions/           session_id.rs, terminal_size.rs, session_end.rs
 ├── application/                crate sallygate-application: use cases and ports
 │   └── src/
 │       ├── inventory/          list_hosts.rs, save_host.rs, delete_host.rs, import_ssh_config.rs;
 │       │                       ports: host_repository.rs, ssh_config_source.rs
 │       ├── trust/              trust_host_key.rs; known_hosts.rs (port)
+│       ├── snippets/           manage_snippets.rs; snippet_repository.rs (port)
 │       ├── transfer/           browse_remote_files.rs, transfer_files.rs, open_file_systems.rs;
 │       │                       remote_files.rs (ports RemoteFiles, TransferProgress)
 │       └── sessions/           open_session.rs, write_to_session.rs, resize_session.rs,
@@ -92,6 +94,8 @@ src/
 │   ├── src/
 │   │   ├── inventory/          json_host_repository.rs, ssh_config_file.rs
 │   │   ├── transfer/           sftp_remote_files.rs
+│   │   ├── snippets/           json_snippet_repository.rs
+│   │   ├── json_file.rs        atomic JSON files in the app data folder
 │   │   ├── trust/              known_hosts_file.rs, openssh_host_key.rs
 │   │   └── sessions/           russh_connector.rs, russh_live_session.rs,
 │   │                           server_key_check.rs, key_file.rs
@@ -104,16 +108,19 @@ src/
     │       │                   error_mapping.rs
     │       ├── trust/          commands.rs, contract.rs
     │       ├── transfer/       commands.rs, contract.rs (DTOs, progress channel)
+    │       ├── snippets/       commands.rs, contract.rs
     │       ├── command_error.rs    the error every command returns
     │       └── composition.rs      builds adapters and use cases (the only place that knows them)
     └── ui/                     TypeScript: React + faber-ui, inside the desktop window
-        ├── app/                entry point, global styles, the window (tabs, hosts, sessions)
+        ├── app/                entry point, theme, the window (tabs, side menu app-side-nav/, sessions)
         ├── inventory/          inventory-gateway.ts, inventory-contract.ts (generated), use-hosts.ts,
         │                       group-hosts.ts, hosts-view/, host-card/, host-form/, host-drawer/
         ├── sessions/           sessions-gateway.ts, sessions-contract.ts (generated),
         │                       use-connection.ts, use-session-tabs.ts, session-request.ts,
         │                       session-output-buffer.ts, session-tab-bar/, session-panel/,
         │                       terminal-view/, session-ended-notice/
+        ├── snippets/           snippets-gateway.ts, snippets-contract.ts (generated), use-snippets.ts,
+        │                       snippet-input.ts, snippets-view/, snippet-dialog/, snippet-panel/
         ├── transfer/           transfer-gateway.ts, transfer-contract.ts (generated),
         │                       use-remote-files.ts, files-view/, name-dialog/
         ├── trust/              trust-gateway.ts, trust-contract.ts (generated),
@@ -193,6 +200,7 @@ _Planned:_ tags, a jump host, and password and ssh-agent auth.
 
 ## Local storage
 
+- **`snippets.json`** in the app data folder: saved snippets (name and command), versioned, written atomically like `hosts.json`.
 - **`hosts.json`** in the app data folder (on macOS `~/Library/Application Support/dev.sallygate.app/`): saved hosts and their groups, versioned (`"version": 1`), written atomically. No secrets, only the key file path.
 - **`~/.ssh/known_hosts`**: trusted server keys, shared with the `ssh` command. Sallygate writes to it only after the user trusts a key.
 - **`~/.ssh/config`**: read, never written, when the user imports it (`SshConfigFile`). Imported hosts land in the "SSH config" group; importing again adds only hosts not saved yet (same address, port and username).
