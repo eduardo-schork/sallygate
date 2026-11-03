@@ -59,7 +59,7 @@ Enforced by the compiler (each Rust layer is its own crate and can only use what
 | `credentials` | Auth methods and secrets; the only context that touches secrets (keychain now, vault later)         | Partly built: key file or password, secrets typed at connect time (ADR-0015)                                               |
 | `inventory`   | Saved hosts and their groups; `~/.ssh/config` import; later tags                                    | Built (0.1.0): hosts, groups by name, import from `~/.ssh/config`                                                          |
 | `transfer`    | SFTP browsing and the transfer queue                                                                | Built (0.2.0): browse, create, rename, delete, upload and download with progress, over the session's connection (ADR-0017) |
-| `tunnels`     | Local, remote and dynamic port forwarding                                                           | Planned (0.3.0)                                                                                                            |
+| `tunnels`     | Local, remote and dynamic port forwarding                                                           | Built (0.3.0): local and SOCKS rules, one connection each (ADR-0018)                                                       |
 | `snippets`    | Saved commands sent to sessions                                                                     | Built (0.3.0): `snippets.json`, screen, panel beside the terminal                                                          |
 
 Contexts talk to each other only through application-layer interfaces (a use case or a port), never by reaching into another context's domain internals.
@@ -78,14 +78,16 @@ src/
 │       ├── trust/              host_key.rs, host_key_status.rs, known_host_entry.rs
 │       ├── transfer/           remote_entry.rs (entries, path helpers)
 │       ├── snippets/           snippet.rs (id, name, command)
+│       ├── tunnels/            tunnel.rs (id, name, kind: local or dynamic)
 │       └── sessions/           session_id.rs, terminal_size.rs, session_end.rs
 ├── application/                crate sallygate-application: use cases and ports
 │   └── src/
 │       ├── credentials/        manage_ssh_keys.rs; key_store.rs (port)
-│       ├── inventory/          list_hosts.rs, save_host.rs delete_host.rs, import_ssh_config.rs;
+│       ├── inventory/          list_hosts.rs, save_host.rs, delete_host.rs, import_ssh_config.rs;
 │       │                       ports: host_repository.rs, ssh_config_source.rs
 │       ├── trust/              trust_host_key.rs, manage_known_hosts.rs; known_hosts.rs (port)
 │       ├── snippets/           manage_snippets.rs; snippet_repository.rs (port)
+│       ├── tunnels/            manage_tunnels.rs; ports: tunnel_repository.rs, tunnel_opener.rs
 │       ├── transfer/           browse_remote_files.rs, transfer_files.rs, open_file_systems.rs;
 │       │                       remote_files.rs (ports RemoteFiles, TransferProgress)
 │       └── sessions/           open_session.rs, write_to_session.rs, resize_session.rs,
@@ -97,6 +99,7 @@ src/
 │   │   ├── inventory/          json_host_repository.rs, ssh_config_file.rs
 │   │   ├── transfer/           sftp_remote_files.rs
 │   │   ├── snippets/           json_snippet_repository.rs
+│   │   ├── tunnels/            json_tunnel_repository.rs, russh_tunnel_opener.rs, socks5.rs
 │   │   ├── json_file.rs        atomic JSON files in the app data folder
 │   │   ├── trust/              known_hosts_file.rs, openssh_host_key.rs
 │   │   └── sessions/           russh_connector.rs, russh_live_session.rs,
@@ -112,6 +115,7 @@ src/
     │       ├── trust/          commands.rs, contract.rs
     │       ├── transfer/       commands.rs, contract.rs (DTOs, progress channel)
     │       ├── snippets/       commands.rs, contract.rs
+    │       ├── tunnels/        commands.rs, contract.rs
     │       ├── command_error.rs    the error every command returns
     │       └── composition.rs      builds adapters and use cases (the only place that knows them)
     └── ui/                     TypeScript: React + faber-ui, inside the desktop window
@@ -124,6 +128,8 @@ src/
         │                       use-connection.ts, use-session-tabs.ts, session-request.ts,
         │                       session-output-buffer.ts, session-tab-bar/, session-panel/,
         │                       terminal-view/, session-ended-notice/
+        ├── tunnels/            tunnels-gateway.ts, tunnels-contract.ts (generated), use-tunnels.ts,
+        │                       describe-tunnel.ts, forwarding-view/, tunnel-dialog/
         ├── snippets/           snippets-gateway.ts, snippets-contract.ts (generated), use-snippets.ts,
         │                       snippet-input.ts, snippets-view/, snippet-dialog/, snippet-panel/
         ├── transfer/           transfer-gateway.ts, transfer-contract.ts (generated),
@@ -206,6 +212,7 @@ _Planned:_ tags, a jump host, and password and ssh-agent auth.
 
 ## Local storage
 
+- **`tunnels.json`** in the app data folder: forwarding rules (host id, kind, ports), versioned, written atomically.
 - **`snippets.json`** in the app data folder: saved snippets (name and command), versioned, written atomically like `hosts.json`.
 - **`hosts.json`** in the app data folder (on macOS `~/Library/Application Support/dev.sallygate.app/`): saved hosts and their groups, versioned (`"version": 1`), written atomically. No secrets, only the key file path.
 - **`~/.ssh/known_hosts`**: trusted server keys, shared with the `ssh` command. Sallygate writes to it only after the user trusts a key.

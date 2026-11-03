@@ -46,6 +46,8 @@ pub enum CommandErrorKind {
     FileOperationFailed,
     SnippetStoreUnavailable,
     KeyStoreUnavailable,
+    TunnelStoreUnavailable,
+    PortInUse,
 }
 
 impl CommandError {

@@ -9,6 +9,7 @@ mod sessions;
 mod snippets;
 mod transfer;
 mod trust;
+mod tunnels;
 
 use tauri::Manager;
 
@@ -39,6 +40,11 @@ pub fn run() -> tauri::Result<()> {
             credentials::commands::list_ssh_keys,
             credentials::commands::generate_ssh_key,
             credentials::commands::import_ssh_key,
+            tunnels::commands::list_tunnels,
+            tunnels::commands::save_tunnel,
+            tunnels::commands::delete_tunnel,
+            tunnels::commands::start_tunnel,
+            tunnels::commands::stop_tunnel,
             snippets::commands::list_snippets,
             snippets::commands::save_snippet,
             snippets::commands::delete_snippet,

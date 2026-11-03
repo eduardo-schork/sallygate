@@ -19,6 +19,8 @@ const COMMAND_ERROR_KINDS: Record<TCommandErrorKind, true> = {
   fileOperationFailed: true,
   snippetStoreUnavailable: true,
   keyStoreUnavailable: true,
+  tunnelStoreUnavailable: true,
+  portInUse: true,
 };
 
 /** Tauri rejects a failed command with the Rust `CommandError`; anything else is unexpected. */

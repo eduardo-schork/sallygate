@@ -8,3 +8,4 @@ pub mod sessions;
 pub mod snippets;
 pub mod transfer;
 pub mod trust;
+pub mod tunnels;

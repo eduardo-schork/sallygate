@@ -8,7 +8,7 @@ mod save_host;
 mod ssh_config_source;
 
 #[cfg(test)]
-mod test_doubles;
+pub(crate) mod test_doubles;
 
 pub use delete_host::DeleteHost;
 pub use host_repository::{HostRepository, HostStoreError};

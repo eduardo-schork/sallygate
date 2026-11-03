@@ -72,4 +72,12 @@ export const CONNECTION_ERROR_COPY: Record<TCommandErrorKind, TErrorCopy> = {
     title: 'Could not use ~/.ssh',
     hint: 'Check that the folder exists and can be read and written by your user.',
   },
+  tunnelStoreUnavailable: {
+    title: 'Could not use the forwarding rules',
+    hint: 'Sallygate keeps them in its data folder; check that it can be read and written.',
+  },
+  portInUse: {
+    title: 'That port is already in use on this Mac',
+    hint: 'Another app or rule listens on it. Pick another port in the rule.',
+  },
 };

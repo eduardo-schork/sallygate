@@ -11,7 +11,7 @@ use crate::trust::host_key_from_public_key;
 
 /// The russh event handler for one connection. Its only job is to accept or
 /// refuse the server key, remembering why it refused.
-pub(super) struct ServerKeyCheck {
+pub(crate) struct ServerKeyCheck {
     endpoint: SshEndpoint,
     known_hosts: Arc<dyn KnownHosts>,
     rejection: Arc<Mutex<Option<OpenSessionError>>>,

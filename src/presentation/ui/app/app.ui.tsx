@@ -12,6 +12,7 @@ import { HOSTS_TAB_ID, useSessionTabs } from '../sessions/use-session-tabs';
 import type { TCommandError } from '../shared/command-error-contract';
 import { SnippetsView } from '../snippets/snippets-view';
 import { KnownHostsView } from '../trust/known-hosts-view';
+import { ForwardingView } from '../tunnels/forwarding-view';
 import { useSnippets } from '../snippets/use-snippets';
 import { AppSideNav, type TAppView } from './app-side-nav';
 import { AppRoot, HomePanel, HomeView } from './app.styles';
@@ -94,6 +95,7 @@ export function App() {
             />
           ) : null}
           {view === 'keys' ? <KeysView hosts={hosts} /> : null}
+          {view === 'forwarding' ? <ForwardingView hosts={hosts} /> : null}
           {view === 'knownHosts' ? <KnownHostsView /> : null}
         </HomeView>
       </HomePanel>

@@ -8,4 +8,4 @@ mod error_mapping;
 
 pub use commands::parse_session_id;
 pub use contract::{AuthDto, EndpointDto};
-pub use error_mapping::from_session_command_error;
+pub use error_mapping::{from_open_session_error, from_session_command_error};

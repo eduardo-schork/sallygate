@@ -13,11 +13,13 @@ use sallygate_application::sessions::{
 use sallygate_application::snippets::ManageSnippets;
 use sallygate_application::transfer::{BrowseRemoteFiles, OpenFileSystems, TransferFiles};
 use sallygate_application::trust::{KnownHosts, ManageKnownHosts, TrustHostKey};
+use sallygate_application::tunnels::ManageTunnels;
 use sallygate_infrastructure::credentials::SshFolderKeyStore;
 use sallygate_infrastructure::inventory::{JsonHostRepository, SshConfigFile};
 use sallygate_infrastructure::sessions::RusshConnector;
 use sallygate_infrastructure::snippets::JsonSnippetRepository;
 use sallygate_infrastructure::trust::KnownHostsFile;
+use sallygate_infrastructure::tunnels::{JsonTunnelRepository, RusshTunnelOpener};
 use thiserror::Error;
 
 /// The use cases the Tauri commands call, shared as Tauri state.
@@ -36,6 +38,7 @@ pub struct AppServices {
     pub snippets: ManageSnippets,
     pub known_hosts: ManageKnownHosts,
     pub ssh_keys: ManageSshKeys,
+    pub tunnels: ManageTunnels,
 }
 
 #[derive(Debug, Error)]
@@ -72,7 +75,7 @@ pub fn compose(app_data_folder: &Path) -> Result<AppServices, CompositionError> 
         list_hosts: ListHosts::new(Arc::clone(&hosts)),
         save_host: SaveHost::new(Arc::clone(&hosts)),
         delete_host: DeleteHost::new(Arc::clone(&hosts)),
-        import_ssh_config: ImportSshConfig::new(ssh_config, hosts),
+        import_ssh_config: ImportSshConfig::new(ssh_config, Arc::clone(&hosts)),
         open_session: OpenSession::new(
             Arc::new(RusshConnector::new()),
             Arc::clone(&known_hosts),
@@ -82,6 +85,14 @@ pub fn compose(app_data_folder: &Path) -> Result<AppServices, CompositionError> 
         resize_session: ResizeSession::new(Arc::clone(&registry)),
         close_session: CloseSession::new(registry),
         trust_host_key: TrustHostKey::new(Arc::clone(&known_hosts)),
+        tunnels: ManageTunnels::new(
+            Arc::new(JsonTunnelRepository::new(
+                app_data_folder.join("tunnels.json"),
+            )),
+            Arc::clone(&hosts),
+            Arc::new(RusshTunnelOpener::new()),
+            Arc::clone(&known_hosts),
+        ),
         known_hosts: ManageKnownHosts::new(known_hosts),
         ssh_keys: ManageSshKeys::new(Arc::new(SshFolderKeyStore::new(
             key_folder,

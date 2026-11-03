@@ -11,7 +11,7 @@ mod ssh_connector;
 mod write_to_session;
 
 #[cfg(test)]
-mod test_doubles;
+pub(crate) mod test_doubles;
 
 pub use close_session::CloseSession;
 pub use live_session::{LiveSession, LiveSessionError};
