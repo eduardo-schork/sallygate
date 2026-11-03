@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { formatPermissions } from './format-permissions';
 import { formatSize } from './format-size';
 import { baseName, parentFolder } from './remote-path';
 
@@ -24,5 +25,14 @@ describe('formatSize', () => {
     expect(formatSize(512)).toBe('512 B');
     expect(formatSize(1536)).toBe('1.5 KB');
     expect(formatSize(25 * 1024 * 1024)).toBe('25 MB');
+  });
+});
+
+describe('formatPermissions', () => {
+  it('SHOULD write the mode like ls -l', () => {
+    expect(formatPermissions('folder', 0o755)).toBe('drwxr-xr-x');
+    expect(formatPermissions('file', 0o644)).toBe('-rw-r--r--');
+    expect(formatPermissions('link', 0o777)).toBe('lrwxrwxrwx');
+    expect(formatPermissions('file')).toBe('');
   });
 });

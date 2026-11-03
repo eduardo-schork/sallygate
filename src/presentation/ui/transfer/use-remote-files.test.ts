@@ -1,24 +1,24 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { TRemoteEntry, TRemoteFolder } from './transfer-contract';
+import type { TFileEntry, TFolderListing } from './transfer-contract';
 import type { TTransferGateway } from './transfer-gateway';
 import { useRemoteFiles } from './use-remote-files';
 
-function entry(path: string, kind: TRemoteEntry['kind'] = 'file'): TRemoteEntry {
+function entry(path: string, kind: TFileEntry['kind'] = 'file'): TFileEntry {
   return { name: path.split('/').pop() ?? path, path, kind, sizeBytes: 10 };
 }
 
 function fakeFiles(): TTransferGateway & { readonly calls: string[] } {
   const calls: string[] = [];
-  const listing: Record<string, TRemoteEntry[]> = {
+  const listing: Record<string, TFileEntry[]> = {
     '/home/me': [entry('/home/me/apps', 'folder'), entry('/home/me/notes.txt')],
     '/home': [entry('/home/me', 'folder')],
   };
   return {
     calls,
     listFolder: (_sessionId, path = '/home/me') =>
-      Promise.resolve<TRemoteFolder>({ path, entries: listing[path] ?? [] }),
+      Promise.resolve<TFolderListing>({ path, entries: listing[path] ?? [] }),
     makeFolder: (_sessionId, parent, name) => {
       calls.push(`make ${parent} ${name}`);
       return Promise.resolve();
@@ -28,9 +28,10 @@ function fakeFiles(): TTransferGateway & { readonly calls: string[] } {
       calls.push(`delete ${path}`);
       return Promise.resolve();
     },
-    download: (_sessionId, remotePath, onProgress) => {
+    listLocalFolder: (path = '/Users/me') => Promise.resolve({ path, entries: [] }),
+    download: (_sessionId, remotePath, localFolder, onProgress) => {
       onProgress({ doneBytes: 5, totalBytes: 10 });
-      return Promise.resolve(`/Users/me/Downloads/${remotePath.split('/').pop() ?? ''}`);
+      return Promise.resolve(`${localFolder}/${remotePath.split('/').pop() ?? ''}`);
     },
     upload: (_sessionId, localPath, remoteFolder) => {
       calls.push(`upload ${localPath} ${remoteFolder}`);
@@ -72,7 +73,7 @@ describe('useRemoteFiles', () => {
   it('SHOULD track a download until it lands', async () => {
     const { result } = await renderFiles(fakeFiles());
 
-    await act(() => result.current.download(entry('/home/me/notes.txt')));
+    await act(() => result.current.download(entry('/home/me/notes.txt'), '/Users/me/Downloads'));
 
     expect(result.current.transfers).toEqual([
       expect.objectContaining({

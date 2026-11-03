@@ -48,6 +48,7 @@ pub fn run() -> tauri::Result<()> {
             snippets::commands::list_snippets,
             snippets::commands::save_snippet,
             snippets::commands::delete_snippet,
+            transfer::commands::list_local_folder,
             transfer::commands::list_remote_folder,
             transfer::commands::make_remote_folder,
             transfer::commands::rename_remote_entry,

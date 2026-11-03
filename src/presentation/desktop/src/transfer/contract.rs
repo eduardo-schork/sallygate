@@ -1,5 +1,7 @@
-use sallygate_application::transfer::{RemoteFolder, TransferError, TransferProgress};
-use sallygate_domain::transfer::{EntryKind, RemoteEntry};
+use sallygate_application::transfer::{
+    FolderListing, LocalFilesError, TransferError, TransferProgress,
+};
+use sallygate_domain::transfer::{EntryKind, FileEntry};
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Channel;
 use ts_rs::TS;
@@ -40,15 +42,15 @@ impl From<EntryKindDto> for EntryKind {
     }
 }
 
-/// One file, folder or link on the server.
+/// One file, folder or link, on this computer or on the server.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(
-    rename = "TRemoteEntry",
+    rename = "TFileEntry",
     export,
     export_to = "../../ui/transfer/transfer-contract.ts"
 )]
-pub struct RemoteEntryDto {
+pub struct FileEntryDto {
     pub name: String,
     pub path: String,
     pub kind: EntryKindDto,
@@ -59,38 +61,43 @@ pub struct RemoteEntryDto {
     #[ts(optional, type = "number")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub modified_at: Option<u64>,
+    /// Unix mode bits, like `0o644`.
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub permissions: Option<u32>,
 }
 
-impl From<&RemoteEntry> for RemoteEntryDto {
-    fn from(entry: &RemoteEntry) -> Self {
+impl From<&FileEntry> for FileEntryDto {
+    fn from(entry: &FileEntry) -> Self {
         Self {
             name: entry.name.clone(),
             path: entry.path.clone(),
             kind: entry.kind.into(),
             size_bytes: entry.size_bytes,
             modified_at: entry.modified_at,
+            permissions: entry.permissions,
         }
     }
 }
 
-/// A remote folder and what is in it, folders first.
+/// A folder and what is in it, folders first.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(
-    rename = "TRemoteFolder",
+    rename = "TFolderListing",
     export,
     export_to = "../../ui/transfer/transfer-contract.ts"
 )]
-pub struct RemoteFolderDto {
+pub struct FolderListingDto {
     pub path: String,
-    pub entries: Vec<RemoteEntryDto>,
+    pub entries: Vec<FileEntryDto>,
 }
 
-impl From<&RemoteFolder> for RemoteFolderDto {
-    fn from(folder: &RemoteFolder) -> Self {
+impl From<&FolderListing> for FolderListingDto {
+    fn from(folder: &FolderListing) -> Self {
         Self {
             path: folder.path.clone(),
-            entries: folder.entries.iter().map(RemoteEntryDto::from).collect(),
+            entries: folder.entries.iter().map(FileEntryDto::from).collect(),
         }
     }
 }
@@ -131,4 +138,8 @@ pub fn from_transfer_error(error: &TransferError) -> CommandError {
         }
         TransferError::Remote(_) => CommandError::new(CommandErrorKind::FileOperationFailed, error),
     }
+}
+
+pub fn from_local_files_error(error: &LocalFilesError) -> CommandError {
+    CommandError::new(CommandErrorKind::FileOperationFailed, error)
 }

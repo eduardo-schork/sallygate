@@ -112,7 +112,11 @@ export function SessionPanel({ request, isActive, onCloseTab, snippets }: TSessi
           </SessionView>
           {hasOpenedFiles ? (
             <SessionView hidden={view !== 'files'}>
-              <FilesView sessionId={state.sessionId} isActive={isActive && view === 'files'} />
+              <FilesView
+                sessionId={state.sessionId}
+                serverLabel={serverLabel}
+                isActive={isActive && view === 'files'}
+              />
             </SessionView>
           ) : null}
         </>

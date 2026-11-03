@@ -1,17 +1,9 @@
 use std::sync::Arc;
 
 use sallygate_domain::sessions::SessionId;
-use sallygate_domain::transfer::{EntryKind, RemoteEntry, file_name, join_remote_path};
+use sallygate_domain::transfer::{EntryKind, file_name, join_remote_path};
 
-use super::{OpenFileSystems, TransferError};
-
-/// A remote folder and what is in it.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RemoteFolder {
-    pub path: String,
-    /// Folders first, then by name (case-insensitive).
-    pub entries: Vec<RemoteEntry>,
-}
+use super::{FolderListing, OpenFileSystems, TransferError};
 
 /// Use case: look around the server's files and tidy them.
 pub struct BrowseRemoteFiles {
@@ -33,17 +25,14 @@ impl BrowseRemoteFiles {
         &self,
         session_id: SessionId,
         folder: Option<&str>,
-    ) -> Result<RemoteFolder, TransferError> {
+    ) -> Result<FolderListing, TransferError> {
         let files = self.file_systems.of(session_id).await?;
         let path = match folder {
             Some(folder) => folder.to_owned(),
             None => files.home().await?,
         };
-        let mut entries = files.list(&path).await?;
-        entries.sort_by_cached_key(|entry| {
-            (entry.kind != EntryKind::Folder, entry.name.to_lowercase())
-        });
-        Ok(RemoteFolder { path, entries })
+        let entries = files.list(&path).await?;
+        Ok(FolderListing::new(path, entries))
     }
 
     /// # Errors

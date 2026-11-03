@@ -1,5 +1,4 @@
 import {
-  Alert,
   AlertDialog,
   Button,
   FLEX_ALIGNS,
@@ -7,19 +6,12 @@ import {
   HFlex,
   IconButton,
   Progress,
-  Spinner,
-  Table,
   Text,
-  VFlex,
-  VisuallyHidden,
 } from '@faber-ui/react';
 import {
-  ArrowUpIcon,
+  ArrowRightIcon,
   DownloadIcon,
   EditIcon,
-  FileIcon,
-  FolderIcon,
-  LinkIcon,
   PlusIcon,
   RefreshIcon,
   TrashIcon,
@@ -27,34 +19,29 @@ import {
 } from '@faber-ui/icons';
 import { useEffect, useState } from 'react';
 
+import { FilePane } from '../file-pane';
 import { formatSize } from '../format-size';
 import { NameDialog } from '../name-dialog';
-import type { TRemoteEntry } from '../transfer-contract';
+import type { TFileEntry } from '../transfer-contract';
+import { useLocalFiles } from '../use-local-files';
 import { type TTransfer, useRemoteFiles } from '../use-remote-files';
 import {
-  EntryName,
-  FilesTableScroll,
-  FilesToolbar,
   FilesViewRoot,
-  FolderPath,
-  MetaCell,
-  TransfersList,
+  Panes,
+  TransferBar,
+  TransferPercent,
+  TransferRow,
+  TransferStatus,
 } from './files-view.styles';
 import type { TFilesViewProps } from './files-view.types';
 
-const DATE_FORMAT = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-
-const ENTRY_ICONS = {
-  file: <FileIcon />,
-  folder: <FolderIcon />,
-  link: <LinkIcon />,
-} as const;
+const LOCAL_LABEL = 'This Mac';
 
 /** What the user is naming or confirming in a dialog, if anything. */
 type TPrompt =
   | { readonly kind: 'newFolder' }
-  | { readonly kind: 'rename'; readonly entry: TRemoteEntry }
-  | { readonly kind: 'delete'; readonly entry: TRemoteEntry };
+  | { readonly kind: 'rename'; readonly entry: TFileEntry }
+  | { readonly kind: 'delete'; readonly entry: TFileEntry };
 
 function transferStatus(transfer: TTransfer): string {
   if (transfer.status === 'failed') {
@@ -62,8 +49,8 @@ function transferStatus(transfer: TTransfer): string {
   }
   if (transfer.status === 'done') {
     return transfer.direction === 'download'
-      ? `Saved to ${transfer.detail ?? 'Downloads'}`
-      : 'Uploaded';
+      ? `Saved to ${transfer.detail ?? LOCAL_LABEL}`
+      : `Uploaded to ${transfer.detail ?? 'the server'}`;
   }
   const verb = transfer.direction === 'download' ? 'Downloading' : 'Uploading';
   return transfer.totalBytes > 0
@@ -71,12 +58,20 @@ function transferStatus(transfer: TTransfer): string {
     : `${verb}…`;
 }
 
-/** The server's files for one session: browse, tidy, and copy both ways. */
-export function FilesView({ sessionId, isActive, files }: TFilesViewProps) {
+function percent(transfer: TTransfer): string {
+  const share = transfer.totalBytes > 0 ? transfer.doneBytes / transfer.totalBytes : 0;
+  return `${String(Math.round(share * 100))}%`;
+}
+
+/** This Mac beside the server: browse both, and drag files across to copy them. */
+export function FilesView({ sessionId, serverLabel, isActive, files }: TFilesViewProps) {
+  const local = useLocalFiles(files);
   const remote = useRemoteFiles(sessionId, files);
   const [prompt, setPrompt] = useState<TPrompt>();
   const { onFilesDropped, upload } = remote;
+  const localFolder = local.folder?.path;
 
+  // Files dropped from Finder go to the server folder on screen.
   useEffect(() => {
     if (!isActive) {
       return undefined;
@@ -89,139 +84,135 @@ export function FilesView({ sessionId, isActive, files }: TFilesViewProps) {
     };
   }, [isActive, onFilesDropped, upload]);
 
+  const download = async (entry: TFileEntry) => {
+    if (localFolder === undefined) {
+      return;
+    }
+    await remote.download(entry, localFolder);
+    await local.refresh();
+  };
+
   const closePrompt = () => setPrompt(undefined);
-  const entries = remote.folder?.entries ?? [];
   const hasFinishedTransfers = remote.transfers.some((transfer) => transfer.status !== 'running');
+  const iconButton = { size: 'small', variant: 'subtle', color: 'neutral' } as const;
 
   return (
-    <FilesViewRoot gap="SM">
-      <FilesToolbar>
-        <IconButton
-          variant="subtle"
-          color="neutral"
-          aria-label="Go to the parent folder"
-          disabled={remote.folder?.path === '/'}
-          onClick={() => void remote.goUp()}
-        >
-          <ArrowUpIcon />
-        </IconButton>
-        <FolderPath title={remote.folder?.path}>{remote.folder?.path ?? '…'}</FolderPath>
-        <IconButton
-          variant="subtle"
-          color="neutral"
-          aria-label="Refresh"
-          onClick={() => void remote.refresh()}
-        >
-          <RefreshIcon />
-        </IconButton>
-        <Button
-          variant="outline"
-          color="neutral"
-          startIcon={<PlusIcon />}
-          onClick={() => setPrompt({ kind: 'newFolder' })}
-        >
-          New folder
-        </Button>
-        <Button startIcon={<UploadIcon />} onClick={() => void remote.pickAndUpload()}>
-          Upload
-        </Button>
-      </FilesToolbar>
-
-      {remote.error ? (
-        <Alert color="error" role="alert">
-          {remote.error.message}
-        </Alert>
-      ) : null}
-
-      <FilesTableScroll>
-        {remote.isLoading && !remote.folder ? <Spinner label="Loading files" /> : null}
-        {remote.folder && entries.length === 0 ? (
-          <Text.P>This folder is empty. Drop files on the window to upload them here.</Text.P>
-        ) : null}
-        {entries.length > 0 ? (
-          <Table aria-label={`Files in ${remote.folder?.path ?? ''}`}>
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Size</th>
-                <th scope="col">Modified</th>
-                <th scope="col">
-                  <VisuallyHidden>Actions</VisuallyHidden>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((entry) => (
-                <tr key={entry.path}>
-                  <td>
-                    {entry.kind === 'folder' ? (
-                      <Button
-                        variant="subtle"
-                        color="neutral"
-                        size="small"
-                        startIcon={ENTRY_ICONS.folder}
-                        onClick={() => void remote.open(entry.path)}
-                      >
-                        {entry.name}
-                      </Button>
-                    ) : (
-                      <EntryName>
-                        {ENTRY_ICONS[entry.kind]}
-                        <span>{entry.name}</span>
-                      </EntryName>
-                    )}
-                  </td>
-                  <MetaCell>{entry.kind === 'folder' ? '' : formatSize(entry.sizeBytes)}</MetaCell>
-                  <MetaCell>
-                    {entry.modifiedAt === undefined
-                      ? ''
-                      : DATE_FORMAT.format(new Date(entry.modifiedAt * 1000))}
-                  </MetaCell>
-                  <td>
-                    <HFlex gap="XXS" justify={FLEX_JUSTIFIES.END}>
-                      {entry.kind === 'file' ? (
-                        <IconButton
-                          size="small"
-                          variant="subtle"
-                          color="neutral"
-                          aria-label={`Download ${entry.name}`}
-                          onClick={() => void remote.download(entry)}
-                        >
-                          <DownloadIcon />
-                        </IconButton>
-                      ) : null}
-                      <IconButton
-                        size="small"
-                        variant="subtle"
-                        color="neutral"
-                        aria-label={`Rename ${entry.name}`}
-                        onClick={() => setPrompt({ kind: 'rename', entry })}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        variant="subtle"
-                        color="neutral"
-                        aria-label={`Delete ${entry.name}`}
-                        onClick={() => setPrompt({ kind: 'delete', entry })}
-                      >
-                        <TrashIcon />
-                      </IconButton>
-                    </HFlex>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        ) : null}
-      </FilesTableScroll>
+    <FilesViewRoot>
+      <Panes>
+        <FilePane
+          side="local"
+          label={LOCAL_LABEL}
+          folder={local.folder}
+          isLoading={local.isLoading}
+          error={local.error}
+          onOpenFolder={(path) => void local.open(path)}
+          onGoUp={() => void local.goUp()}
+          toolbar={
+            <IconButton
+              {...iconButton}
+              aria-label={`Refresh ${LOCAL_LABEL}`}
+              onClick={() => void local.refresh()}
+            >
+              <RefreshIcon />
+            </IconButton>
+          }
+          renderActions={(entry) =>
+            entry.kind === 'file' ? (
+              <IconButton
+                {...iconButton}
+                aria-label={`Upload ${entry.name} to the server`}
+                onClick={() => void remote.upload([entry.path])}
+              >
+                <ArrowRightIcon />
+              </IconButton>
+            ) : null
+          }
+          onDropFile={(entry) => void download(entry)}
+        />
+        <FilePane
+          side="remote"
+          label={serverLabel}
+          folder={remote.folder}
+          isLoading={remote.isLoading}
+          error={remote.error}
+          onOpenFolder={(path) => void remote.open(path)}
+          onGoUp={() => void remote.goUp()}
+          toolbar={
+            <>
+              <IconButton
+                {...iconButton}
+                aria-label="Refresh the server"
+                onClick={() => void remote.refresh()}
+              >
+                <RefreshIcon />
+              </IconButton>
+              <IconButton
+                {...iconButton}
+                aria-label="New folder on the server"
+                onClick={() => setPrompt({ kind: 'newFolder' })}
+              >
+                <PlusIcon />
+              </IconButton>
+              <Button
+                size="small"
+                startIcon={<UploadIcon />}
+                onClick={() => void remote.pickAndUpload()}
+              >
+                Upload
+              </Button>
+            </>
+          }
+          renderActions={(entry) => (
+            <>
+              {entry.kind === 'file' ? (
+                <IconButton
+                  {...iconButton}
+                  aria-label={`Download ${entry.name} to ${LOCAL_LABEL}`}
+                  onClick={() => void download(entry)}
+                >
+                  <DownloadIcon />
+                </IconButton>
+              ) : null}
+              <IconButton
+                {...iconButton}
+                aria-label={`Rename ${entry.name}`}
+                onClick={() => setPrompt({ kind: 'rename', entry })}
+              >
+                <EditIcon />
+              </IconButton>
+              <IconButton
+                {...iconButton}
+                aria-label={`Delete ${entry.name}`}
+                onClick={() => setPrompt({ kind: 'delete', entry })}
+              >
+                <TrashIcon />
+              </IconButton>
+            </>
+          )}
+          onDropFile={(entry) => void remote.upload([entry.path])}
+        />
+      </Panes>
 
       {remote.transfers.length > 0 ? (
-        <TransfersList gap="XS" as="section" aria-label="Transfers">
-          <HFlex align={FLEX_ALIGNS.CENTER} justify={FLEX_JUSTIFIES.SPACE_BETWEEN}>
-            <Text.Strong>Transfers</Text.Strong>
-            {hasFinishedTransfers ? (
+        <TransferBar gap="XS" as="section" aria-label="Transfers">
+          {remote.transfers.map((transfer) => (
+            <TransferRow key={transfer.id}>
+              <Text.Strong>{transfer.name}</Text.Strong>
+              <TransferStatus>{transferStatus(transfer)}</TransferStatus>
+              {transfer.status === 'running' ? (
+                <>
+                  <Progress
+                    label={`${transfer.direction === 'download' ? 'Downloading' : 'Uploading'} ${transfer.name}`}
+                    value={transfer.doneBytes}
+                    max={Math.max(transfer.totalBytes, 1)}
+                  />
+                  <TransferPercent>{percent(transfer)}</TransferPercent>
+                </>
+              ) : null}
+            </TransferRow>
+          ))}
+          {hasFinishedTransfers ? (
+            <HFlex align={FLEX_ALIGNS.CENTER} justify={FLEX_JUSTIFIES.END}>
               <Button
                 size="small"
                 variant="subtle"
@@ -230,30 +221,15 @@ export function FilesView({ sessionId, isActive, files }: TFilesViewProps) {
               >
                 Clear finished
               </Button>
-            ) : null}
-          </HFlex>
-          {remote.transfers.map((transfer) => (
-            <VFlex key={transfer.id} gap="XXS">
-              <HFlex gap="SM" justify={FLEX_JUSTIFIES.SPACE_BETWEEN}>
-                <Text.Small>{transfer.name}</Text.Small>
-                <Text.Small>{transferStatus(transfer)}</Text.Small>
-              </HFlex>
-              {transfer.status === 'running' ? (
-                <Progress
-                  label={`${transfer.direction === 'download' ? 'Downloading' : 'Uploading'} ${transfer.name}`}
-                  value={transfer.doneBytes}
-                  max={Math.max(transfer.totalBytes, 1)}
-                />
-              ) : null}
-            </VFlex>
-          ))}
-        </TransfersList>
+            </HFlex>
+          ) : null}
+        </TransferBar>
       ) : null}
 
       {prompt?.kind === 'newFolder' ? (
         <NameDialog
           open
-          title="New folder"
+          title="New folder on the server"
           submitLabel="Create folder"
           onSubmit={(name) => {
             closePrompt();

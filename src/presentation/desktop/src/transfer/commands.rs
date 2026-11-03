@@ -10,8 +10,8 @@ use tauri::ipc::Channel;
 use tauri::{AppHandle, Manager, State};
 
 use super::contract::{
-    ChannelTransferProgress, EntryKindDto, RemoteFolderDto, TransferProgressDto,
-    from_transfer_error,
+    ChannelTransferProgress, EntryKindDto, FolderListingDto, TransferProgressDto,
+    from_local_files_error, from_transfer_error,
 };
 use crate::command_error::{CommandError, CommandErrorKind};
 use crate::composition::AppServices;
@@ -23,13 +23,13 @@ pub async fn list_remote_folder(
     services: State<'_, AppServices>,
     session_id: String,
     path: Option<String>,
-) -> Result<RemoteFolderDto, CommandError> {
+) -> Result<FolderListingDto, CommandError> {
     let folder = services
         .browse_remote_files
         .list(parse_session_id(&session_id)?, path.as_deref())
         .await
         .map_err(|error| from_transfer_error(&error))?;
-    Ok(RemoteFolderDto::from(&folder))
+    Ok(FolderListingDto::from(&folder))
 }
 
 /// Makes a folder named `name` inside `parent`.
@@ -77,19 +77,37 @@ pub async fn delete_remote_entry(
         .map_err(|error| from_transfer_error(&error))
 }
 
-/// Copies a remote file into the user's Downloads folder and returns its local path.
+/// Lists a folder on this computer; the home folder when `path` is missing.
+#[tauri::command]
+pub fn list_local_folder(
+    services: State<'_, AppServices>,
+    path: Option<String>,
+) -> Result<FolderListingDto, CommandError> {
+    let folder = services
+        .browse_local_files
+        .list(path.as_deref())
+        .map_err(|error| from_local_files_error(&error))?;
+    Ok(FolderListingDto::from(&folder))
+}
+
+/// Copies a remote file into `local_folder` (the Downloads folder when missing) and returns
+/// its local path.
 #[tauri::command]
 pub async fn download_remote_file(
     app: AppHandle,
     services: State<'_, AppServices>,
     session_id: String,
     remote_path: String,
+    local_folder: Option<String>,
     on_progress: Channel<TransferProgressDto>,
 ) -> Result<String, CommandError> {
-    let downloads = app
-        .path()
-        .download_dir()
-        .map_err(|error| CommandError::new(CommandErrorKind::FileOperationFailed, &error))?;
+    let downloads = match local_folder {
+        Some(folder) => PathBuf::from(folder),
+        None => app
+            .path()
+            .download_dir()
+            .map_err(|error| CommandError::new(CommandErrorKind::FileOperationFailed, &error))?,
+    };
     let local_path = services
         .transfer_files
         .download(

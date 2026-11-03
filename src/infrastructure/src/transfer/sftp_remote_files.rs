@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use russh_sftp::client::SftpSession;
 use russh_sftp::protocol::FileType;
 use sallygate_application::transfer::{RemoteFiles, RemoteFilesError, TransferProgress};
-use sallygate_domain::transfer::{EntryKind, RemoteEntry, file_name};
+use sallygate_domain::transfer::{EntryKind, FileEntry, file_name};
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 /// Bytes copied between progress reports.
@@ -82,7 +82,7 @@ impl RemoteFiles for SftpRemoteFiles {
             .map_err(|error| remote_error(&error))
     }
 
-    async fn list(&self, folder: &str) -> Result<Vec<RemoteEntry>, RemoteFilesError> {
+    async fn list(&self, folder: &str) -> Result<Vec<FileEntry>, RemoteFilesError> {
         let entries = self
             .sftp
             .read_dir(folder)
@@ -92,12 +92,13 @@ impl RemoteFiles for SftpRemoteFiles {
             .filter(|entry| !matches!(entry.file_name().as_str(), "." | ".."))
             .map(|entry| {
                 let metadata = entry.metadata();
-                RemoteEntry {
+                FileEntry {
                     path: sallygate_domain::transfer::join_remote_path(folder, &entry.file_name()),
                     name: entry.file_name(),
                     kind: entry_kind(entry.file_type()),
                     size_bytes: metadata.size.unwrap_or_default(),
                     modified_at: metadata.mtime.map(u64::from),
+                    permissions: metadata.permissions.map(|mode| mode & 0o7777),
                 }
             })
             .collect())

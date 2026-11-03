@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use sallygate_domain::transfer::{EntryKind, RemoteEntry};
+use sallygate_domain::transfer::{EntryKind, FileEntry};
 use thiserror::Error;
 
 /// Port: the files on the server behind one open session.
@@ -12,7 +12,7 @@ pub trait RemoteFiles: Send + Sync {
     async fn home(&self) -> Result<String, RemoteFilesError>;
 
     /// The entries of a folder, in no particular order, without `.` and `..`.
-    async fn list(&self, folder: &str) -> Result<Vec<RemoteEntry>, RemoteFilesError>;
+    async fn list(&self, folder: &str) -> Result<Vec<FileEntry>, RemoteFilesError>;
 
     async fn make_folder(&self, path: &str) -> Result<(), RemoteFilesError>;
 

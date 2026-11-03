@@ -1,4 +1,4 @@
-/// What a remote entry is. Links are shown as they are and not followed.
+/// What an entry is. Links are shown as they are and not followed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EntryKind {
     File,
@@ -6,16 +6,18 @@ pub enum EntryKind {
     Link,
 }
 
-/// One file, folder or link inside a remote folder.
+/// One file, folder or link inside a folder, on this computer or on a server.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RemoteEntry {
+pub struct FileEntry {
     pub name: String,
-    /// Full path on the server.
+    /// Full path on the machine it lives on.
     pub path: String,
     pub kind: EntryKind,
     pub size_bytes: u64,
-    /// Seconds since 1970, when the server says.
+    /// Seconds since 1970, when known.
     pub modified_at: Option<u64>,
+    /// Unix mode bits (`0o644`), when known.
+    pub permissions: Option<u32>,
 }
 
 /// `folder` + `/` + `name`, without doubling the slash at the root.

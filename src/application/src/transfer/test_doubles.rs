@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
 use sallygate_domain::sessions::{SessionId, TerminalSize};
-use sallygate_domain::transfer::{EntryKind, RemoteEntry, file_name};
+use sallygate_domain::transfer::{EntryKind, FileEntry, file_name};
 
 use super::{RemoteFiles, RemoteFilesError, TransferProgress};
 use crate::sessions::{LiveSession, LiveSessionError, SessionRegistry};
@@ -16,7 +16,7 @@ pub const HOME: &str = "/home/me";
 /// Remote entries by path, plus a log of the calls that change them.
 #[derive(Default)]
 pub struct FakeRemoteFiles {
-    pub entries: Mutex<Vec<RemoteEntry>>,
+    pub entries: Mutex<Vec<FileEntry>>,
     pub calls: Mutex<Vec<String>>,
 }
 
@@ -25,12 +25,13 @@ impl FakeRemoteFiles {
         let files = Self::default();
         *files.entries.lock().unwrap() = entries
             .iter()
-            .map(|(path, kind)| RemoteEntry {
+            .map(|(path, kind)| FileEntry {
                 name: file_name(path).to_owned(),
                 path: (*path).to_owned(),
                 kind: *kind,
                 size_bytes: 0,
                 modified_at: None,
+                permissions: None,
             })
             .collect();
         Arc::new(files)
@@ -47,7 +48,7 @@ impl RemoteFiles for FakeRemoteFiles {
         Ok(HOME.to_owned())
     }
 
-    async fn list(&self, folder: &str) -> Result<Vec<RemoteEntry>, RemoteFilesError> {
+    async fn list(&self, folder: &str) -> Result<Vec<FileEntry>, RemoteFilesError> {
         let prefix = format!("{}/", folder.trim_end_matches('/'));
         Ok(self
             .entries

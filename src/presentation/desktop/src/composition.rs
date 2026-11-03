@@ -10,14 +10,17 @@ use sallygate_application::inventory::{
 use sallygate_application::sessions::{
     CloseSession, OpenSession, ResizeSession, SessionRegistry, WriteToSession,
 };
-use sallygate_application::snippets::ManageSnippets;
-use sallygate_application::transfer::{BrowseRemoteFiles, OpenFileSystems, TransferFiles};
+use sallygate_application::snippets::{ManageSnippets, starter_snippets};
+use sallygate_application::transfer::{
+    BrowseLocalFiles, BrowseRemoteFiles, OpenFileSystems, TransferFiles,
+};
 use sallygate_application::trust::{KnownHosts, ManageKnownHosts, TrustHostKey};
 use sallygate_application::tunnels::ManageTunnels;
 use sallygate_infrastructure::credentials::SshFolderKeyStore;
 use sallygate_infrastructure::inventory::{JsonHostRepository, SshConfigFile};
 use sallygate_infrastructure::sessions::RusshConnector;
 use sallygate_infrastructure::snippets::JsonSnippetRepository;
+use sallygate_infrastructure::transfer::LocalFileSystem;
 use sallygate_infrastructure::trust::KnownHostsFile;
 use sallygate_infrastructure::tunnels::{JsonTunnelRepository, RusshTunnelOpener};
 use thiserror::Error;
@@ -33,6 +36,7 @@ pub struct AppServices {
     pub resize_session: ResizeSession,
     pub close_session: CloseSession,
     pub trust_host_key: TrustHostKey,
+    pub browse_local_files: BrowseLocalFiles,
     pub browse_remote_files: BrowseRemoteFiles,
     pub transfer_files: TransferFiles,
     pub snippets: ManageSnippets,
@@ -98,10 +102,12 @@ pub fn compose(app_data_folder: &Path) -> Result<AppServices, CompositionError> 
             key_folder,
             "~/.ssh".to_owned(),
         ))),
+        browse_local_files: BrowseLocalFiles::new(Arc::new(LocalFileSystem::new(home.clone()))),
         browse_remote_files: BrowseRemoteFiles::new(Arc::clone(&file_systems)),
         transfer_files: TransferFiles::new(file_systems),
         snippets: ManageSnippets::new(Arc::new(JsonSnippetRepository::new(
             app_data_folder.join("snippets.json"),
+            starter_snippets(),
         ))),
     })
 }

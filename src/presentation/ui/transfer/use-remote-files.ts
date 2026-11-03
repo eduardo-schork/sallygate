@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { toCommandError } from '../shared/command-error';
 import type { TCommandError } from '../shared/command-error-contract';
 import { baseName, parentFolder } from './remote-path';
-import type { TRemoteEntry, TRemoteFolder } from './transfer-contract';
+import type { TFileEntry, TFolderListing } from './transfer-contract';
 import { tauriTransferGateway, type TTransferGateway } from './transfer-gateway';
 
 export type TTransfer = {
@@ -19,7 +19,7 @@ export type TTransfer = {
 
 /** The files of one open session: the folder on screen, the changes to it and the transfers. */
 export function useRemoteFiles(sessionId: string, files: TTransferGateway = tauriTransferGateway) {
-  const [folder, setFolder] = useState<TRemoteFolder>();
+  const [folder, setFolder] = useState<TFolderListing>();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<TCommandError>();
   const [transfers, setTransfers] = useState<TTransfer[]>([]);
@@ -93,10 +93,11 @@ export function useRemoteFiles(sessionId: string, files: TTransferGateway = taur
     [],
   );
 
+  /** Copies a remote file into a folder on this computer. */
   const download = useCallback(
-    (entry: TRemoteEntry) =>
+    (entry: TFileEntry, localFolder: string) =>
       track(entry.name, 'download', (onProgress) =>
-        files.download(sessionId, entry.path, onProgress),
+        files.download(sessionId, entry.path, localFolder, onProgress),
       ),
     [files, sessionId, track],
   );
@@ -135,9 +136,9 @@ export function useRemoteFiles(sessionId: string, files: TTransferGateway = taur
     goUp: () => (folder ? open(parentFolder(folder.path)) : Promise.resolve()),
     makeFolder: (name: string) =>
       change(() => files.makeFolder(sessionId, folderPath.current ?? '/', name)),
-    rename: (entry: TRemoteEntry, newName: string) =>
+    rename: (entry: TFileEntry, newName: string) =>
       change(() => files.rename(sessionId, entry.path, newName)),
-    remove: (entry: TRemoteEntry) => change(() => files.delete(sessionId, entry.path, entry.kind)),
+    remove: (entry: TFileEntry) => change(() => files.delete(sessionId, entry.path, entry.kind)),
     download,
     upload,
     pickAndUpload,

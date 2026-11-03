@@ -3,9 +3,9 @@
 export type TEntryKind = "file" | "folder" | "link";
 
 /**
- * One file, folder or link on the server.
+ * One file, folder or link, on this computer or on the server.
  */
-export type TRemoteEntry = { name: string, path: string, kind: TEntryKind, 
+export type TFileEntry = { name: string, path: string, kind: TEntryKind, 
 /**
  * A JavaScript number holds sizes up to 9 PB exactly.
  */
@@ -13,12 +13,16 @@ sizeBytes: number,
 /**
  * Seconds since 1970.
  */
-modifiedAt?: number, };
+modifiedAt?: number, 
+/**
+ * Unix mode bits, like `0o644`.
+ */
+permissions?: number, };
 
 /**
- * A remote folder and what is in it, folders first.
+ * A folder and what is in it, folders first.
  */
-export type TRemoteFolder = { path: string, entries: Array<TRemoteEntry>, };
+export type TFolderListing = { path: string, entries: Array<TFileEntry>, };
 
 /**
  * How far a transfer got.
