@@ -106,7 +106,8 @@ src/
 │   │                           server_key_check.rs, key_file.rs
 │   └── tests/                  integration tests against the Docker SSH server
 └── presentation/
-    ├── desktop/                crate sallygate (Tauri): the native app
+    ├── desktop/                crate sallygate (Tauri): the native app; icons/ (generated) and
+    │                           icons/source/ (the design system's SVGs)
     │   └── src/
     │       ├── credentials/    commands.rs, contract.rs
     │       ├── inventory/      commands.rs, contract.rs

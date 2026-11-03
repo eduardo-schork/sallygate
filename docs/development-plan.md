@@ -120,6 +120,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-03** — App icon from the design system's SVGs (`src/presentation/desktop/icons/source/`): macOS `.icns` uses the small variant (no door frame) up to 32 px and the macOS variant (system mask margin) from 128 px; Windows and Linux icons come from the full icon, with the small one at 32 px. Checked in the built bundle.
 - **2026-11-03** — Jump host: `Host` gains an optional jump host, `log_in` goes through it with `direct-tcpip` + `connect_stream`, sessions and rules keep the jump connection; host form field; ADR-0019. `bun run check:full` passes (84 UI tests; 17 integration tests, 2 new for jumps). Stage 4 is built.
 - **2026-11-03** — Port forwarding: `tunnels` context, shared `log_in` step extracted from the connector, `RusshTunnelOpener` (local and SOCKS5), `tunnels.json`, commands, screen with on/off switches that ask for the server key and password when needed. Test server allows TCP forwarding. `bun run check:full` passes (83 UI tests; 15 integration tests, 3 new for tunnels).
 - **2026-11-03** — SSH keys screen: `KeyStore` port, `SshFolderKeyStore` (ssh-key via russh, `rand` 0.10 already in the tree), `ManageSshKeys`, commands, screen with generate dialog, import and copy. `bun run check` passes (81 UI tests).
