@@ -1,0 +1,75 @@
+/*
+ * Sallygate brand theme (design system v0.1, docs/decisions/0016-sallygate-brand-theme.md).
+ * The --sg-* values are the design system's tokens file; the rest maps them onto faber-ui's
+ * theme variables, so faber-ui components pick up the brand without being changed.
+ * Load it after faber-ui's stylesheet: same selectors, so the later rule wins.
+ */
+@import '@fontsource-variable/manrope';
+@import '@fontsource-variable/jetbrains-mono';
+
+:root,
+[data-theme='light'],
+[data-theme='system'] {
+  --sg-bg: #f3f7f8;
+  --sg-surface: #ffffff;
+  --sg-raised: #e6eef0;
+  --sg-border: #c9d8dc;
+  --sg-text: #0b1a1e;
+  --sg-muted: #4e6368;
+  --sg-accent: #0a7381;
+  --sg-accent-text: #0a7381;
+  --sg-on-accent: #ffffff;
+  --sg-success: #2f7d1f;
+  --sg-warning: #8a5a00;
+  --sg-error: #c2362b;
+  --sg-press-tint: black;
+}
+
+/* After the light block: on the dark root, :root matches both and the later one wins. */
+[data-theme='dark'] {
+  --sg-bg: #0a1316;
+  --sg-surface: #132328;
+  --sg-raised: #1a2e34;
+  --sg-border: #2a4248;
+  --sg-text: #e6f2f3;
+  --sg-muted: #93a9ad;
+  --sg-accent: #4fd1e0;
+  --sg-accent-text: #6adae7;
+  --sg-on-accent: #062227;
+  --sg-success: #8bdb6a;
+  --sg-warning: #f2c14e;
+  --sg-error: #ff7a6e;
+  /* Pressing lightens on a dark background. */
+  --sg-press-tint: white;
+}
+
+:root,
+[data-theme] {
+  --sg-font-ui: 'Manrope Variable', 'Manrope', system-ui, sans-serif;
+  --sg-font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+  --sg-radius-sm: 8px;
+  --sg-radius-md: 12px;
+  --sg-radius-lg: 16px;
+
+  --faber-ui-font-family-base: var(--sg-font-ui);
+
+  --faber-ui-color-background-primary: var(--sg-bg);
+  --faber-ui-color-surface-primary: var(--sg-surface);
+  --faber-ui-color-text-primary: var(--sg-text);
+  --faber-ui-color-text-secondary: var(--sg-muted);
+  --faber-ui-color-border-default: var(--sg-border);
+  --faber-ui-color-border-strong: var(--sg-muted);
+  --faber-ui-color-disabled-background: var(--sg-raised);
+  --faber-ui-color-focus-ring: var(--sg-accent);
+  --faber-ui-color-error: var(--sg-error);
+  /* The design system's accent is faber-ui's primary: main button, focus, brand. */
+  --faber-ui-color-primary: var(--sg-accent);
+  --faber-ui-color-primary-hover: color-mix(in srgb, var(--sg-accent) 88%, var(--sg-press-tint));
+  --faber-ui-color-primary-active: color-mix(in srgb, var(--sg-accent) 76%, var(--sg-press-tint));
+  --faber-ui-color-on-primary: var(--sg-on-accent);
+  /* faber-ui's accent is a neutral strong tone; the brand has none, so it uses the text color. */
+  --faber-ui-color-accent: var(--sg-text);
+  --faber-ui-color-accent-hover: color-mix(in srgb, var(--sg-text) 88%, var(--sg-bg));
+  --faber-ui-color-accent-active: color-mix(in srgb, var(--sg-text) 76%, var(--sg-bg));
+  --faber-ui-color-on-accent: var(--sg-bg);
+}

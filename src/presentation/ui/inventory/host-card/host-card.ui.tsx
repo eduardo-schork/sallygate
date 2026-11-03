@@ -2,7 +2,7 @@ import { Button, HFlex, IconButton, Text } from '@faber-ui/react';
 import { EditIcon, MonitorIcon } from '@faber-ui/icons';
 
 import { formatEndpoint } from '../../shared/format-endpoint';
-import { HostCardIcon, HostCardRoot, HostCardText } from './host-card.styles';
+import { HostCardEndpoint, HostCardIcon, HostCardRoot, HostCardText } from './host-card.styles';
 import type { THostCardProps } from './host-card.types';
 
 /** A saved host: its name, where it points, and the two things you do with it. */
@@ -14,7 +14,7 @@ export function HostCard({ host, onConnect, onEdit }: THostCardProps) {
       </HostCardIcon>
       <HostCardText>
         <Text.Strong>{host.label}</Text.Strong>
-        <Text.Small>{formatEndpoint(host.endpoint)}</Text.Small>
+        <HostCardEndpoint>{formatEndpoint(host.endpoint)}</HostCardEndpoint>
       </HostCardText>
       <HFlex gap="XXS">
         <IconButton

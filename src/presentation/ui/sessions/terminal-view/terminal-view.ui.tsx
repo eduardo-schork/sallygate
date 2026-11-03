@@ -4,8 +4,12 @@ import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { useEffect, useRef } from 'react';
 
-import { createTerminalTheme, TERMINAL_FONT_SIZE } from './terminal-theme';
-import { TERMINAL_FONT_FAMILY, TERMINAL_SCROLLBACK_LINES } from './terminal-view.constants';
+import {
+  createTerminalTheme,
+  resolveTerminalFontFamily,
+  TERMINAL_FONT_SIZE,
+} from './terminal-theme';
+import { TERMINAL_SCROLLBACK_LINES } from './terminal-view.constants';
 import { TerminalViewRoot } from './terminal-view.styles';
 import type { TTerminalViewProps } from './terminal-view.types';
 
@@ -28,7 +32,7 @@ export function TerminalView({ output, onInput, onResize }: TTerminalViewProps) 
 
     const terminal = new Terminal({
       cursorBlink: true,
-      fontFamily: TERMINAL_FONT_FAMILY,
+      fontFamily: resolveTerminalFontFamily(),
       fontSize: TERMINAL_FONT_SIZE,
       scrollback: TERMINAL_SCROLLBACK_LINES,
       theme: createTerminalTheme(),

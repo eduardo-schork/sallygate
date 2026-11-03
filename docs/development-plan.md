@@ -14,7 +14,7 @@ The step-by-step plan for building Sallygate, and the place where progress is tr
   3. The owner uses it daily for a week, then `release/0.1.0`.
 - **Owner to do:** `exit` from a shell on their server; make `develop` the default branch on GitHub; register `sallygate.com`; reserve the `sallygate` crate.
 - **Open questions:** see [architecture.md](architecture.md#open-questions).
-- **Known shortcuts:** the terminal uses the system monospace font until faber-ui has a mono token (`grep -rn "shortcut:" src`).
+- **Known shortcuts:** none in code (`grep -rn "shortcut:" src`); design-system gaps are listed in [architecture.md](architecture.md#design-system-gaps).
 - **Blocked on:** nothing.
 
 Update this block whenever the focus moves.
@@ -116,6 +116,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-03** — Sallygate design system v0.1 applied as a theme over faber-ui (ADR-0016): ice palette dark and light, Manrope for the interface, JetBrains Mono for the terminal and host addresses, both fonts bundled. `bun run check` passes; hosts screen checked in the native window (terminal font not yet seen in a live session).
 - **2026-11-02** — The owner connected to their own cloud server from the app with a key file. Not checked yet: `exit` from the shell, password login on a real server.
 - **2026-11-02** — Password UI: the host drawer chooses key file or password; a `SecretDialog` asks for a missing password or passphrase and sends it with one `open_session` call only. The core now checks the secret after the server key, so a first connection asks about the key first and the password is typed once. 51 UI tests and 11 integration tests pass. Not checked in the native window.
 - **2026-11-02** — Password login and key passphrases in the core: `AuthMethod::Password`, a `Secret` value (redacted, zeroized), `secretRequired` error, `TAuth` in the contract and `hosts.json`; typed at connect time and never saved (ADR-0015). Owner chose this over Keychain storage to reach their servers sooner. 3 new integration tests (password ok, missing, wrong) and passphrase unit tests pass; the UI still only offers key files.

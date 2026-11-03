@@ -1,5 +1,7 @@
-import { Card, CARD_PADDINGS, COLORS, HFlex, RADII, SIZES, SPACINGS } from '@faber-ui/react';
+import { Card, CARD_PADDINGS, COLORS, HFlex, RADII, SIZES, SPACINGS, Text } from '@faber-ui/react';
 import styled from 'styled-components';
+
+import { BRAND_FONT_FAMILIES } from '../../shared/brand-tokens';
 
 export const HostCardRoot = styled(Card).attrs({ padding: CARD_PADDINGS.SMALL })`
   display: flex;
@@ -29,4 +31,9 @@ export const HostCardText = styled.div`
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+`;
+
+/** Where the host points, in mono: something you would type in a terminal. */
+export const HostCardEndpoint = styled(Text.Small)`
+  font-family: ${BRAND_FONT_FAMILIES.MONO};
 `;

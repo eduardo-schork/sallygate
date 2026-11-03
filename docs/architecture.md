@@ -121,7 +121,7 @@ Context folders are created with their first real code; empty folders are not co
 - The UI is a presentation layer: it shows state and sends the user's intents. Business rules live in Rust.
 - Each context has one `*-gateway.ts`, the only code allowed to import `@tauri-apps/*`.
 - Components (`*.ui.tsx`) reach the core through hooks, never through a gateway or Tauri directly. Hooks take gateways as parameters, so tests pass in-memory ones.
-- File conventions follow faber-ui ([ADR-0010](decisions/0010-frontend-follows-faber-ui-conventions.md)); colors, sizes and spacing come from faber-ui tokens, including the terminal's colors, which are read from the theme's CSS variables at runtime.
+- File conventions follow faber-ui ([ADR-0010](decisions/0010-frontend-follows-faber-ui-conventions.md)); colors, sizes and spacing come from faber-ui tokens, including the terminal's colors, which are read from the theme's CSS variables at runtime. The Sallygate brand (palette, Manrope, JetBrains Mono) is a theme over faber-ui's variables in `ui/app/sallygate-theme.css`; brand tokens with no faber-ui slot are read through `ui/shared/brand-tokens.ts` ([ADR-0016](decisions/0016-sallygate-brand-theme.md)).
 
 ### Screens (0.1.0)
 
@@ -144,7 +144,8 @@ The window has a tab bar: **Hosts** first, then one tab per session.
 
 Things the UI needs that faber-ui does not offer yet. Each is a local stand-in until faber-ui adds it.
 
-- **Monospace font token:** the terminal uses the system monospace stack (`terminal-view.constants.ts`).
+- **Monospace font token:** the brand's JetBrains Mono is read from `--sg-font-mono` (`shared/brand-tokens.ts`); `CodeBlock` still uses the base font, so fingerprints are not mono.
+- **Success and warning colors:** defined as `--sg-success` and `--sg-warning`, not yet in faber-ui's theme slots.
 
 ## Contract between UI and core
 
