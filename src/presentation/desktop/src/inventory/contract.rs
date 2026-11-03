@@ -1,3 +1,4 @@
+use sallygate_application::inventory::ImportReport;
 use sallygate_domain::inventory::{GroupName, Host, HostId, HostLabel};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -31,6 +32,50 @@ impl From<&Host> for HostDto {
             endpoint: EndpointDto::from(host.endpoint()),
             auth: AuthDto::from(host.auth()),
             group: host.group().map(ToString::to_string),
+        }
+    }
+}
+
+/// What an import of `~/.ssh/config` did.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(
+    rename = "TImportReport",
+    export,
+    export_to = "../../ui/inventory/inventory-contract.ts"
+)]
+pub struct ImportReportDto {
+    pub imported: Vec<HostDto>,
+    pub already_saved: u32,
+    pub invalid: Vec<InvalidEntryDto>,
+}
+
+/// A config entry left out of an import, and why.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(
+    rename = "TInvalidEntry",
+    export,
+    export_to = "../../ui/inventory/inventory-contract.ts"
+)]
+pub struct InvalidEntryDto {
+    pub alias: String,
+    pub reason: String,
+}
+
+impl From<&ImportReport> for ImportReportDto {
+    fn from(report: &ImportReport) -> Self {
+        Self {
+            imported: report.imported.iter().map(HostDto::from).collect(),
+            already_saved: u32::try_from(report.already_saved).unwrap_or(u32::MAX),
+            invalid: report
+                .invalid
+                .iter()
+                .map(|(alias, reason)| InvalidEntryDto {
+                    alias: alias.clone(),
+                    reason: reason.clone(),
+                })
+                .collect(),
         }
     }
 }

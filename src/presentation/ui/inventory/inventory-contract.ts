@@ -7,6 +7,16 @@ import type { TAuth, TEndpoint } from "../sessions/sessions-contract";
 export type THost = { id: string, label: string, endpoint: TEndpoint, auth: TAuth, group?: string, };
 
 /**
+ * What an import of `~/.ssh/config` did.
+ */
+export type TImportReport = { imported: Array<THost>, alreadySaved: number, invalid: Array<TInvalidEntry>, };
+
+/**
+ * A config entry left out of an import, and why.
+ */
+export type TInvalidEntry = { alias: string, reason: string, };
+
+/**
  * A new host (no `id`) or the changes to a saved one.
  */
 export type TSaveHostRequest = { id?: string, label: string, endpoint: TEndpoint, auth: TAuth, 

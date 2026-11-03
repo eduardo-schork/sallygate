@@ -52,15 +52,15 @@ Enforced by the compiler (each Rust layer is its own crate and can only use what
 
 ## Bounded contexts
 
-| Context       | Owns                                                                                                | Status                                         |
-| ------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `sessions`    | Interactive terminal sessions: connect, PTY, input/output, resize, keepalive, close                 | Built (0.1.0)                                  |
-| `trust`       | Server host keys: verify against `known_hosts`, record trusted keys, report unknown or changed keys | Built (0.1.0)                                  |
-| `credentials` | Auth methods and secrets; the only context that touches secrets (keychain now, vault later)         | Partly built: key file without passphrase only |
-| `inventory`   | Saved hosts and their groups; later tags and `~/.ssh/config` import                                 | Built (0.1.0): hosts, groups by name           |
-| `transfer`    | SFTP browsing and the transfer queue                                                                | Planned (0.2.0)                                |
-| `tunnels`     | Local, remote and dynamic port forwarding                                                           | Planned (0.3.0)                                |
-| `snippets`    | Saved commands sent to sessions                                                                     | Planned (0.3.0)                                |
+| Context       | Owns                                                                                                | Status                                                                       |
+| ------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `sessions`    | Interactive terminal sessions: connect, PTY, input/output, resize, keepalive, close                 | Built (0.1.0)                                                                |
+| `trust`       | Server host keys: verify against `known_hosts`, record trusted keys, report unknown or changed keys | Built (0.1.0)                                                                |
+| `credentials` | Auth methods and secrets; the only context that touches secrets (keychain now, vault later)         | Partly built: key file or password, secrets typed at connect time (ADR-0015) |
+| `inventory`   | Saved hosts and their groups; `~/.ssh/config` import; later tags                                    | Built (0.1.0): hosts, groups by name, import from `~/.ssh/config`            |
+| `transfer`    | SFTP browsing and the transfer queue                                                                | Planned (0.2.0)                                                              |
+| `tunnels`     | Local, remote and dynamic port forwarding                                                           | Planned (0.3.0)                                                              |
+| `snippets`    | Saved commands sent to sessions                                                                     | Planned (0.3.0)                                                              |
 
 Contexts talk to each other only through application-layer interfaces (a use case or a port), never by reaching into another context's domain internals.
 
@@ -187,6 +187,7 @@ _Planned:_ tags, a jump host, and password and ssh-agent auth.
 
 - **`hosts.json`** in the app data folder (on macOS `~/Library/Application Support/dev.sallygate.app/`): saved hosts and their groups, versioned (`"version": 1`), written atomically. No secrets, only the key file path.
 - **`~/.ssh/known_hosts`**: trusted server keys, shared with the `ssh` command. Sallygate writes to it only after the user trusts a key.
+- **`~/.ssh/config`**: read, never written, when the user imports it (`SshConfigFile`). Imported hosts land in the "SSH config" group; importing again adds only hosts not saved yet (same address, port and username).
 - **Private key files** are read when a session opens and are never copied.
 - _Planned:_ the OS keychain via `keyring` for passwords and passphrases.
 

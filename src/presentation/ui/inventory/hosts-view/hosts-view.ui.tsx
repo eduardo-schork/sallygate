@@ -14,8 +14,10 @@ import {
 import { PlusIcon } from '@faber-ui/icons';
 import { useState } from 'react';
 
+import { describeImport } from '../describe-import';
 import { groupHosts, matchesSearch } from '../group-hosts';
 import { HostCard } from '../host-card';
+import type { TImportResult } from '../use-hosts';
 import { HostGrid, HostsSearch, HostsToolbar, HostsViewRoot } from './hosts-view.styles';
 import type { THostsViewProps } from './hosts-view.types';
 
@@ -27,13 +29,33 @@ export function HostsView({
   onNewHost,
   onConnect,
   onEdit,
+  onImportSshConfig,
 }: THostsViewProps) {
   const [search, setSearch] = useState('');
   const groups = groupHosts(hosts.filter((host) => matchesSearch(host, search)));
 
+  const [importResult, setImportResult] = useState<TImportResult>();
+  const [isImporting, setIsImporting] = useState(false);
+
+  const importSshConfig = async () => {
+    setIsImporting(true);
+    setImportResult(await onImportSshConfig());
+    setIsImporting(false);
+  };
+
   const newHostButton = (
     <Button startIcon={<PlusIcon />} onClick={onNewHost}>
       New host
+    </Button>
+  );
+  const importButton = (
+    <Button
+      variant="outline"
+      color="neutral"
+      loading={isImporting}
+      onClick={() => void importSshConfig()}
+    >
+      Import from SSH config
     </Button>
   );
 
@@ -54,6 +76,7 @@ export function HostsView({
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
+          {importButton}
           {newHostButton}
         </HostsToolbar>
       </HFlex>
@@ -64,13 +87,30 @@ export function HostsView({
         </Alert>
       ) : null}
 
+      {importResult && 'error' in importResult ? (
+        <Alert color="error" title="Could not import ~/.ssh/config" role="alert">
+          {importResult.error.message}
+        </Alert>
+      ) : null}
+
+      {importResult && 'report' in importResult ? (
+        <Alert color="primary" role="status">
+          {describeImport(importResult.report)}
+        </Alert>
+      ) : null}
+
       {isLoading ? <Spinner label="Loading hosts" /> : null}
 
       {!isLoading && hosts.length === 0 && !loadError ? (
         <EmptyState
           title="No hosts yet"
-          description="Save a server once, then open a terminal on it with one click."
-          actions={newHostButton}
+          description="Save a server once, then open a terminal on it with one click. Already use ~/.ssh/config? Import it."
+          actions={
+            <HFlex gap="SM">
+              {importButton}
+              {newHostButton}
+            </HFlex>
+          }
         />
       ) : null}
 

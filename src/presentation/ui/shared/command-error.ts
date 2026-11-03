@@ -12,6 +12,7 @@ const COMMAND_ERROR_KINDS: Record<TCommandErrorKind, true> = {
   connectionFailed: true,
   knownHostsUnavailable: true,
   hostStoreUnavailable: true,
+  sshConfigUnreadable: true,
   sessionNotFound: true,
   sessionFailed: true,
 };

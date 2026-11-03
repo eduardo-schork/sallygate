@@ -16,7 +16,7 @@ function host(label: string, group?: string): THost {
 
 const hosts = [host('api', 'Cloud'), host('web', 'Cloud'), host('nas')];
 
-function renderView(onConnect = vi.fn()) {
+function renderView(onConnect = vi.fn(), onImportSshConfig = vi.fn()) {
   render(
     <HostsView
       hosts={hosts}
@@ -24,6 +24,7 @@ function renderView(onConnect = vi.fn()) {
       onNewHost={vi.fn()}
       onConnect={onConnect}
       onEdit={vi.fn()}
+      onImportSshConfig={onImportSshConfig}
     />,
   );
 }
@@ -60,5 +61,19 @@ describe('HostsView', () => {
     fireEvent.click(within(card).getByRole('button', { name: 'Connect' }));
 
     expect(onConnect).toHaveBeenCalledWith(hosts[1]);
+  });
+
+  it('SHOULD import ~/.ssh/config and say what it did', async () => {
+    const onImportSshConfig = vi.fn().mockResolvedValue({
+      report: { imported: [host('oracle')], alreadySaved: 0, invalid: [] },
+    });
+    renderView(vi.fn(), onImportSshConfig);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Import from SSH config' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Imported 1 host into the SSH config group.',
+    );
+    expect(onImportSshConfig).toHaveBeenCalledOnce();
   });
 });

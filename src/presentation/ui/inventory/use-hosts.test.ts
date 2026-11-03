@@ -18,6 +18,11 @@ function inMemoryInventory(initialHosts: THost[] = []): TInventoryGateway {
       hosts = hosts.filter((host) => host.id !== hostId);
       return Promise.resolve();
     },
+    importSshConfig: () => {
+      const imported: THost = { ...newHost, id: 'imported', group: 'SSH config' };
+      hosts = [...hosts, imported];
+      return Promise.resolve({ imported: [imported], alreadySaved: 0, invalid: [] });
+    },
   };
 }
 
@@ -79,5 +84,19 @@ describe('useHosts', () => {
     const outcome = await act(() => result.current.saveHost(newHost));
 
     expect(outcome).toEqual({ error: { kind: 'invalidInput', message: 'the host name is empty' } });
+  });
+
+  it('SHOULD reload the hosts after an import', async () => {
+    const inventory = inMemoryInventory();
+    const { result } = renderHook(() => useHosts(inventory));
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.importSshConfig();
+    });
+
+    expect(result.current.hosts.map((host) => host.id)).toEqual(['imported']);
   });
 });

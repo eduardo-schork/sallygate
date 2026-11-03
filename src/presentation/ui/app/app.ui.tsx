@@ -16,7 +16,7 @@ type TDrawerState = { readonly isOpen: boolean; readonly host?: THost | undefine
 
 /** The window: tabs on top, the hosts screen or a session below. */
 export function App() {
-  const { hosts, isLoading, loadError, saveHost, deleteHost } = useHosts();
+  const { hosts, isLoading, loadError, saveHost, deleteHost, importSshConfig } = useHosts();
   const { tabs, activeTabId, openTab, closeTab, selectTab } = useSessionTabs();
   const [drawer, setDrawer] = useState<TDrawerState>({ isOpen: false });
   const [isSaving, setIsSaving] = useState(false);
@@ -71,6 +71,7 @@ export function App() {
           onNewHost={() => openDrawer()}
           onConnect={connectTo}
           onEdit={openDrawer}
+          onImportSshConfig={importSshConfig}
         />
       </HostsPanel>
       {tabs.map((tab) => (

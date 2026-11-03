@@ -7,11 +7,11 @@ The step-by-step plan for building Sallygate, and the place where progress is tr
 ## Current focus
 
 - **Stage:** 2 — Hosts and tabs. Saved hosts, the host drawer and session tabs are built and checked in the native window.
-- **What works today:** save, edit and delete hosts in groups (`hosts.json`); search; connect with a private key file (passphrase typed at connect time) or a password typed at connect time, never saved; confirm an unknown server key, block a changed one; a resizable terminal per tab; several tabs at once; closing a tab closes its session.
+- **What works today:** save, edit and delete hosts in groups (`hosts.json`); search; connect with a private key file (passphrase typed at connect time) or a password typed at connect time, never saved; import hosts from `~/.ssh/config`; confirm an unknown server key, block a changed one; a resizable terminal per tab; several tabs at once; closing a tab closes its session.
 - **Next tasks, in order:**
-  1. Native-window check of the password dialog (test server, `127.0.0.1:2222`).
-  2. Import `~/.ssh/config` into saved hosts.
-  3. The owner uses it daily for a week, then `release/0.1.0`.
+  1. Owner: check the password dialog in the native window (background clicks cannot reach the webview).
+  2. Stage 3: SFTP (`transfer` context, dual-pane browser, transfer queue).
+  3. Cut `release/0.1.0` when the owner asks (no week-long trial: the owner keeps development going).
 - **Owner to do:** `exit` from a shell on their server; make `develop` the default branch on GitHub; register `sallygate.com`; reserve the `sallygate` crate.
 - **Open questions:** see [architecture.md](architecture.md#open-questions).
 - **Known shortcuts:** none in code (`grep -rn "shortcut:" src`); design-system gaps are listed in [architecture.md](architecture.md#design-system-gaps).
@@ -68,7 +68,7 @@ Update this block whenever the focus moves.
 
 **Goal:** a usable daily SSH client for saved hosts.
 **Branch:** `develop`
-**Done when:** the owner uses Sallygate instead of `ssh` in the terminal for a week. Then cut `release/0.1.0`.
+**Done when:** the features below are built and checked. The owner chose to skip a week-long trial; `release/0.1.0` is cut when the owner asks.
 
 - [x] `inventory` domain: `Host`, `HostId`, `HostLabel`, `GroupName` (groups are names on hosts); application: `SaveHost`, `ListHosts`, `DeleteHost`; `HostRepository` port; `JsonHostRepository` adapter (`hosts.json` in the app data folder, atomic writes)
 - [x] Core and contract for password login and key passphrases typed at connect time (ADR-0015)
@@ -79,7 +79,7 @@ Update this block whenever the focus moves.
 - [x] Host drawer: create, edit and delete (with confirmation) a host
 - [x] Window tab bar: Hosts plus one tab per session; switching keeps sessions running; closing a tab closes its session
 - [x] Host key prompts in the UI (unknown key, changed key), per session tab
-- [ ] Import `~/.ssh/config`
+- [x] Import `~/.ssh/config`: `SshConfigSource` port, `SshConfigFile` adapter (`Host`, `HostName`, `User`, `Port`, `IdentityFile`; `Host *` as defaults; `Include` and `Match` skipped), `ImportSshConfig` use case (group "SSH config", skips hosts already saved), "Import from SSH config" button
 - [ ] Release `0.1.0`: `release/0.1.0`, changelog, tag `v0.1.0`, signed macOS build
 
 ## Stage 3 — SFTP (0.2.0)
@@ -116,6 +116,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-03** — `~/.ssh/config` import: parser adapter, use case and button with a one-line result. Rust and UI tests pass (`bun run check`). The password dialog could not be checked in the native window: background clicks do not reach the Tauri webview; left to the owner.
 - **2026-11-03** — Sallygate design system v0.1 applied as a theme over faber-ui (ADR-0016): ice palette dark and light, Manrope for the interface, JetBrains Mono for the terminal and host addresses, both fonts bundled. `bun run check` passes; hosts screen checked in the native window (terminal font not yet seen in a live session).
 - **2026-11-02** — The owner connected to their own cloud server from the app with a key file. Not checked yet: `exit` from the shell, password login on a real server.
 - **2026-11-02** — Password UI: the host drawer chooses key file or password; a `SecretDialog` asks for a missing password or passphrase and sends it with one `open_session` call only. The core now checks the secret after the server key, so a first connection asks about the key first and the password is typed once. 51 UI tests and 11 integration tests pass. Not checked in the native window.

@@ -39,6 +39,7 @@ pub enum CommandErrorKind {
     ConnectionFailed,
     KnownHostsUnavailable,
     HostStoreUnavailable,
+    SshConfigUnreadable,
     SessionNotFound,
     SessionFailed,
 }

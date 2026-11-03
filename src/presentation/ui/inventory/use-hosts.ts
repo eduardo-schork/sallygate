@@ -2,10 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { toCommandError } from '../shared/command-error';
 import type { TCommandError } from '../shared/command-error-contract';
-import type { THost, TSaveHostRequest } from './inventory-contract';
+import type { THost, TImportReport, TSaveHostRequest } from './inventory-contract';
 import { tauriInventoryGateway, type TInventoryGateway } from './inventory-gateway';
 
 type TSaveResult = { readonly host: THost } | { readonly error: TCommandError };
+export type TImportResult = { readonly report: TImportReport } | { readonly error: TCommandError };
 
 /** The saved hosts, kept in sync with the core after every change. */
 export function useHosts(inventory: TInventoryGateway = tauriInventoryGateway) {
@@ -54,5 +55,15 @@ export function useHosts(inventory: TInventoryGateway = tauriInventoryGateway) {
     [inventory, reload],
   );
 
-  return { hosts, isLoading, loadError, saveHost, deleteHost };
+  const importSshConfig = useCallback(async (): Promise<TImportResult> => {
+    try {
+      const report = await inventory.importSshConfig();
+      await reload();
+      return { report };
+    } catch (rejection: unknown) {
+      return { error: toCommandError(rejection) };
+    }
+  }, [inventory, reload]);
+
+  return { hosts, isLoading, loadError, saveHost, deleteHost, importSshConfig };
 }

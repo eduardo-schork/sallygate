@@ -24,6 +24,7 @@ pub fn run() -> tauri::Result<()> {
             inventory::commands::list_hosts,
             inventory::commands::save_host,
             inventory::commands::delete_host,
+            inventory::commands::import_ssh_config,
             sessions::commands::open_session,
             sessions::commands::write_to_session,
             sessions::commands::resize_session,
