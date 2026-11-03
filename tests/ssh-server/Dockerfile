@@ -8,7 +8,9 @@ RUN apk add --no-cache openssh bash \
   && sed -i \
     -e 's/^#\?PasswordAuthentication .*/PasswordAuthentication yes/' \
     -e 's/^#\?PermitRootLogin .*/PermitRootLogin no/' \
-    /etc/ssh/sshd_config
+    /etc/ssh/sshd_config \
+  # Tests drop connections before login on purpose (unknown server key); do not penalize them.
+  && echo 'PerSourcePenalties no' >> /etc/ssh/sshd_config
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

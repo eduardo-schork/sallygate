@@ -16,7 +16,7 @@ use super::error_mapping::{from_open_session_error, from_session_command_error};
 use crate::command_error::CommandError;
 use crate::composition::AppServices;
 
-fn parse_session_id(session_id: &str) -> Result<SessionId, CommandError> {
+pub fn parse_session_id(session_id: &str) -> Result<SessionId, CommandError> {
     session_id
         .parse()
         .map_err(|error| CommandError::invalid_input(&error))

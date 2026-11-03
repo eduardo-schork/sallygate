@@ -15,6 +15,8 @@ const COMMAND_ERROR_KINDS: Record<TCommandErrorKind, true> = {
   sshConfigUnreadable: true,
   sessionNotFound: true,
   sessionFailed: true,
+  filesUnavailable: true,
+  fileOperationFailed: true,
 };
 
 /** Tauri rejects a failed command with the Rust `CommandError`; anything else is unexpected. */

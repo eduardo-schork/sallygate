@@ -5,6 +5,7 @@ mod command_error;
 mod composition;
 mod inventory;
 mod sessions;
+mod transfer;
 mod trust;
 
 use tauri::Manager;
@@ -16,6 +17,7 @@ use tauri::Manager;
 /// Returns the Tauri error when the window or runtime cannot start.
 pub fn run() -> tauri::Result<()> {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             app.manage(composition::compose(&app.path().app_data_dir()?)?);
             Ok(())
@@ -30,6 +32,12 @@ pub fn run() -> tauri::Result<()> {
             sessions::commands::resize_session,
             sessions::commands::close_session,
             trust::commands::trust_host_key,
+            transfer::commands::list_remote_folder,
+            transfer::commands::make_remote_folder,
+            transfer::commands::rename_remote_entry,
+            transfer::commands::delete_remote_entry,
+            transfer::commands::download_remote_file,
+            transfer::commands::upload_local_file,
         ])
         .run(tauri::generate_context!())
 }

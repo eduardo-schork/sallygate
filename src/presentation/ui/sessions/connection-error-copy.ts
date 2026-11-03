@@ -56,4 +56,12 @@ export const CONNECTION_ERROR_COPY: Record<TCommandErrorKind, TErrorCopy> = {
     title: 'The session stopped responding',
     hint: 'Connect again to open a new one.',
   },
+  filesUnavailable: {
+    title: "Could not open the server's files",
+    hint: 'The server may not offer SFTP; the terminal still works.',
+  },
+  fileOperationFailed: {
+    title: 'The file operation failed',
+    hint: 'Check the permissions of the file or folder on the server.',
+  },
 };

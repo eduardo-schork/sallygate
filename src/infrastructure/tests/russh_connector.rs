@@ -119,7 +119,10 @@ impl TestServer {
     async fn trusted_session(&self) -> (Arc<dyn LiveSession>, Arc<RecordingOutput>) {
         let (first_attempt, _) = self.connect_as("sallygate", TEST_SERVER_PORT).await;
         let Err(OpenSessionError::UnknownHostKey(host_key)) = first_attempt else {
-            panic!("expected an unknown host key on the first connection");
+            panic!(
+                "expected an unknown host key on the first connection, got {:?}",
+                first_attempt.err()
+            );
         };
         self.known_hosts
             .trust(&Self::endpoint("sallygate", TEST_SERVER_PORT), &host_key)

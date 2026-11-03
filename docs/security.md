@@ -22,7 +22,8 @@ Sallygate holds the keys to the owner's servers. Treat every change here as secu
 ## What protects the app today
 
 - Unknown server keys need the user's confirmation; changed keys block the connection with no shortcut ([ADR-0014](decisions/0014-confirm-unknown-host-keys-before-connecting.md)).
-- The webview has only Tauri's `core:default` permissions and a strict Content Security Policy in production builds.
+- The webview has Tauri's `core:default` permissions plus `dialog:allow-open` (the system open dialog, to pick files to upload) and a strict Content Security Policy in production builds. It reads no files itself: it passes paths the user picked or dropped to the core.
+- SFTP runs over the session's own SSH connection, so it inherits the server key check and the login; there is no second connection to trust (ADR-0017).
 - Command errors carry a code and a message written for the user; key material never goes into them.
 - Nothing is logged yet.
 

@@ -42,6 +42,8 @@ pub enum CommandErrorKind {
     SshConfigUnreadable,
     SessionNotFound,
     SessionFailed,
+    FilesUnavailable,
+    FileOperationFailed,
 }
 
 impl CommandError {

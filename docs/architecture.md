@@ -52,15 +52,15 @@ Enforced by the compiler (each Rust layer is its own crate and can only use what
 
 ## Bounded contexts
 
-| Context       | Owns                                                                                                | Status                                                                       |
-| ------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `sessions`    | Interactive terminal sessions: connect, PTY, input/output, resize, keepalive, close                 | Built (0.1.0)                                                                |
-| `trust`       | Server host keys: verify against `known_hosts`, record trusted keys, report unknown or changed keys | Built (0.1.0)                                                                |
-| `credentials` | Auth methods and secrets; the only context that touches secrets (keychain now, vault later)         | Partly built: key file or password, secrets typed at connect time (ADR-0015) |
-| `inventory`   | Saved hosts and their groups; `~/.ssh/config` import; later tags                                    | Built (0.1.0): hosts, groups by name, import from `~/.ssh/config`            |
-| `transfer`    | SFTP browsing and the transfer queue                                                                | Planned (0.2.0)                                                              |
-| `tunnels`     | Local, remote and dynamic port forwarding                                                           | Planned (0.3.0)                                                              |
-| `snippets`    | Saved commands sent to sessions                                                                     | Planned (0.3.0)                                                              |
+| Context       | Owns                                                                                                | Status                                                                                                                     |
+| ------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `sessions`    | Interactive terminal sessions: connect, PTY, input/output, resize, keepalive, close                 | Built (0.1.0)                                                                                                              |
+| `trust`       | Server host keys: verify against `known_hosts`, record trusted keys, report unknown or changed keys | Built (0.1.0)                                                                                                              |
+| `credentials` | Auth methods and secrets; the only context that touches secrets (keychain now, vault later)         | Partly built: key file or password, secrets typed at connect time (ADR-0015)                                               |
+| `inventory`   | Saved hosts and their groups; `~/.ssh/config` import; later tags                                    | Built (0.1.0): hosts, groups by name, import from `~/.ssh/config`                                                          |
+| `transfer`    | SFTP browsing and the transfer queue                                                                | Built (0.2.0): browse, create, rename, delete, upload and download with progress, over the session's connection (ADR-0017) |
+| `tunnels`     | Local, remote and dynamic port forwarding                                                           | Planned (0.3.0)                                                                                                            |
+| `snippets`    | Saved commands sent to sessions                                                                     | Planned (0.3.0)                                                                                                            |
 
 Contexts talk to each other only through application-layer interfaces (a use case or a port), never by reaching into another context's domain internals.
 
@@ -76,17 +76,22 @@ src/
 │       │                       host_address.rs, port.rs, username.rs, ssh_endpoint.rs
 │       ├── credentials/        auth_method.rs, key_file_path.rs, secret.rs
 │       ├── trust/              host_key.rs, host_key_status.rs
+│       ├── transfer/           remote_entry.rs (entries, path helpers)
 │       └── sessions/           session_id.rs, terminal_size.rs, session_end.rs
 ├── application/                crate sallygate-application: use cases and ports
 │   └── src/
-│       ├── inventory/          list_hosts.rs, save_host.rs, delete_host.rs; host_repository.rs (port)
+│       ├── inventory/          list_hosts.rs, save_host.rs, delete_host.rs, import_ssh_config.rs;
+│       │                       ports: host_repository.rs, ssh_config_source.rs
 │       ├── trust/              trust_host_key.rs; known_hosts.rs (port)
+│       ├── transfer/           browse_remote_files.rs, transfer_files.rs, open_file_systems.rs;
+│       │                       remote_files.rs (ports RemoteFiles, TransferProgress)
 │       └── sessions/           open_session.rs, write_to_session.rs, resize_session.rs,
 │                               close_session.rs, session_registry.rs; ports: ssh_connector.rs,
 │                               live_session.rs, session_output.rs
 ├── infrastructure/             crate sallygate-infrastructure: adapters
 │   ├── src/
-│   │   ├── inventory/          json_host_repository.rs
+│   │   ├── inventory/          json_host_repository.rs, ssh_config_file.rs
+│   │   ├── transfer/           sftp_remote_files.rs
 │   │   ├── trust/              known_hosts_file.rs, openssh_host_key.rs
 │   │   └── sessions/           russh_connector.rs, russh_live_session.rs,
 │   │                           server_key_check.rs, key_file.rs
@@ -98,6 +103,7 @@ src/
     │       ├── sessions/       commands.rs, contract.rs (DTOs), channel_session_output.rs,
     │       │                   error_mapping.rs
     │       ├── trust/          commands.rs, contract.rs
+    │       ├── transfer/       commands.rs, contract.rs (DTOs, progress channel)
     │       ├── command_error.rs    the error every command returns
     │       └── composition.rs      builds adapters and use cases (the only place that knows them)
     └── ui/                     TypeScript: React + faber-ui, inside the desktop window
@@ -108,6 +114,8 @@ src/
         │                       use-connection.ts, use-session-tabs.ts, session-request.ts,
         │                       session-output-buffer.ts, session-tab-bar/, session-panel/,
         │                       terminal-view/, session-ended-notice/
+        ├── transfer/           transfer-gateway.ts, transfer-contract.ts (generated),
+        │                       use-remote-files.ts, files-view/, name-dialog/
         ├── trust/              trust-gateway.ts, trust-contract.ts (generated),
         │                       unknown-host-key-dialog/, changed-host-key-dialog/
         └── shared/             command-error.ts, command-error-contract.ts (generated),
@@ -189,6 +197,7 @@ _Planned:_ tags, a jump host, and password and ssh-agent auth.
 - **`~/.ssh/known_hosts`**: trusted server keys, shared with the `ssh` command. Sallygate writes to it only after the user trusts a key.
 - **`~/.ssh/config`**: read, never written, when the user imports it (`SshConfigFile`). Imported hosts land in the "SSH config" group; importing again adds only hosts not saved yet (same address, port and username).
 - **Private key files** are read when a session opens and are never copied.
+- **Downloads** land in the user's Downloads folder under a free name; uploads read only files the user picked in the system dialog or dropped on the window (ADR-0017).
 - _Planned:_ the OS keychain via `keyring` for passwords and passphrases.
 
 ## Open questions

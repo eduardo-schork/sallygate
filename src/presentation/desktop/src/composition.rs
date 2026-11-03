@@ -9,6 +9,7 @@ use sallygate_application::inventory::{
 use sallygate_application::sessions::{
     CloseSession, OpenSession, ResizeSession, SessionRegistry, WriteToSession,
 };
+use sallygate_application::transfer::{BrowseRemoteFiles, OpenFileSystems, TransferFiles};
 use sallygate_application::trust::{KnownHosts, TrustHostKey};
 use sallygate_infrastructure::inventory::{JsonHostRepository, SshConfigFile};
 use sallygate_infrastructure::sessions::RusshConnector;
@@ -26,6 +27,8 @@ pub struct AppServices {
     pub resize_session: ResizeSession,
     pub close_session: CloseSession,
     pub trust_host_key: TrustHostKey,
+    pub browse_remote_files: BrowseRemoteFiles,
+    pub transfer_files: TransferFiles,
 }
 
 #[derive(Debug, Error)]
@@ -53,6 +56,7 @@ pub fn compose(app_data_folder: &Path) -> Result<AppServices, CompositionError> 
         local_username,
     ));
     let registry = Arc::new(SessionRegistry::new());
+    let file_systems = Arc::new(OpenFileSystems::new(Arc::clone(&registry)));
     let hosts: Arc<dyn HostRepository> =
         Arc::new(JsonHostRepository::new(app_data_folder.join("hosts.json")));
 
@@ -70,5 +74,7 @@ pub fn compose(app_data_folder: &Path) -> Result<AppServices, CompositionError> 
         resize_session: ResizeSession::new(Arc::clone(&registry)),
         close_session: CloseSession::new(registry),
         trust_host_key: TrustHostKey::new(known_hosts),
+        browse_remote_files: BrowseRemoteFiles::new(Arc::clone(&file_systems)),
+        transfer_files: TransferFiles::new(file_systems),
     })
 }

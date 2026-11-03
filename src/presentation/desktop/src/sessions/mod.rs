@@ -6,4 +6,6 @@ pub mod commands;
 mod contract;
 mod error_mapping;
 
+pub use commands::parse_session_id;
 pub use contract::{AuthDto, EndpointDto};
+pub use error_mapping::from_session_command_error;
