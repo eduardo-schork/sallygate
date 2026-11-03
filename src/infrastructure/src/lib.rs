@@ -1,6 +1,7 @@
 //! Infrastructure layer: adapters that implement the application ports with
 //! concrete technology (SSH, file system, OS keychain).
 
+pub mod credentials;
 pub mod inventory;
 mod json_file;
 pub mod sessions;

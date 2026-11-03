@@ -74,14 +74,15 @@ src/
 │   └── src/
 │       ├── inventory/          host.rs, host_id.rs, host_label.rs, group_name.rs,
 │       │                       host_address.rs, port.rs, username.rs, ssh_endpoint.rs
-│       ├── credentials/        auth_method.rs, key_file_path.rs, secret.rs
+│       ├── credentials/        auth_method.rs, key_file_path.rs, secret.rs, ssh_key.rs
 │       ├── trust/              host_key.rs, host_key_status.rs, known_host_entry.rs
 │       ├── transfer/           remote_entry.rs (entries, path helpers)
 │       ├── snippets/           snippet.rs (id, name, command)
 │       └── sessions/           session_id.rs, terminal_size.rs, session_end.rs
 ├── application/                crate sallygate-application: use cases and ports
 │   └── src/
-│       ├── inventory/          list_hosts.rs, save_host.rs, delete_host.rs, import_ssh_config.rs;
+│       ├── credentials/        manage_ssh_keys.rs; key_store.rs (port)
+│       ├── inventory/          list_hosts.rs, save_host.rs delete_host.rs, import_ssh_config.rs;
 │       │                       ports: host_repository.rs, ssh_config_source.rs
 │       ├── trust/              trust_host_key.rs, manage_known_hosts.rs; known_hosts.rs (port)
 │       ├── snippets/           manage_snippets.rs; snippet_repository.rs (port)
@@ -92,6 +93,7 @@ src/
 │                               live_session.rs, session_output.rs
 ├── infrastructure/             crate sallygate-infrastructure: adapters
 │   ├── src/
+│   │   ├── credentials/        ssh_folder_key_store.rs
 │   │   ├── inventory/          json_host_repository.rs, ssh_config_file.rs
 │   │   ├── transfer/           sftp_remote_files.rs
 │   │   ├── snippets/           json_snippet_repository.rs
@@ -103,6 +105,7 @@ src/
 └── presentation/
     ├── desktop/                crate sallygate (Tauri): the native app
     │   └── src/
+    │       ├── credentials/    commands.rs, contract.rs
     │       ├── inventory/      commands.rs, contract.rs
     │       ├── sessions/       commands.rs, contract.rs (DTOs), channel_session_output.rs,
     │       │                   error_mapping.rs
@@ -113,6 +116,8 @@ src/
     │       └── composition.rs      builds adapters and use cases (the only place that knows them)
     └── ui/                     TypeScript: React + faber-ui, inside the desktop window
         ├── app/                entry point, theme, the window (tabs, side menu app-side-nav/, sessions)
+        ├── credentials/        credentials-gateway.ts, credentials-contract.ts (generated), use-ssh-keys.ts,
+        │                       key-users.ts, keys-view/, generate-key-dialog/
         ├── inventory/          inventory-gateway.ts, inventory-contract.ts (generated), use-hosts.ts,
         │                       group-hosts.ts, hosts-view/, host-card/, host-form/, host-drawer/
         ├── sessions/           sessions-gateway.ts, sessions-contract.ts (generated),

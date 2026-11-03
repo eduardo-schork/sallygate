@@ -3,6 +3,7 @@
 
 mod command_error;
 mod composition;
+mod credentials;
 mod inventory;
 mod sessions;
 mod snippets;
@@ -35,6 +36,9 @@ pub fn run() -> tauri::Result<()> {
             trust::commands::trust_host_key,
             trust::commands::list_known_hosts,
             trust::commands::forget_known_host,
+            credentials::commands::list_ssh_keys,
+            credentials::commands::generate_ssh_key,
+            credentials::commands::import_ssh_key,
             snippets::commands::list_snippets,
             snippets::commands::save_snippet,
             snippets::commands::delete_snippet,

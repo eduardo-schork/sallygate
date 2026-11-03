@@ -4,12 +4,12 @@ Sallygate holds the keys to the owner's servers. Treat every change here as secu
 
 ## What we protect
 
-| Asset                            | Where it lives                                                                                                            |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Private keys                     | Key files the user points to, usually in `~/.ssh` (read by the core when a session opens, never copied or sent to the UI) |
-| Key passphrases and passwords    | Typed when a session opens, used once and never saved ([ADR-0015](decisions/0015-secrets-typed-at-connect-time.md))       |
-| Trusted server fingerprints      | `~/.ssh/known_hosts`, shared with the `ssh` command                                                                       |
-| Host list (addresses, usernames) | `hosts.json` in the app data folder; not secret, but private; never holds keys or passwords                               |
+| Asset                            | Where it lives                                                                                                                                                                                                                                                                     |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Private keys                     | Key files the user points to, usually in `~/.ssh` (read by the core when a session opens, never sent to the UI). Keys made or imported on the SSH keys screen are written to `~/.ssh` with mode 0600, never over an existing file; the UI only sees public halves and fingerprints |
+| Key passphrases and passwords    | Typed when a session opens or a key is generated, used once and never saved ([ADR-0015](decisions/0015-secrets-typed-at-connect-time.md))                                                                                                                                          |
+| Trusted server fingerprints      | `~/.ssh/known_hosts`, shared with the `ssh` command                                                                                                                                                                                                                                |
+| Host list (addresses, usernames) | `hosts.json` in the app data folder; not secret, but private; never holds keys or passwords                                                                                                                                                                                        |
 
 ## Rules
 

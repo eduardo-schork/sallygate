@@ -3,6 +3,7 @@
 use std::path::Path;
 use std::sync::Arc;
 
+use sallygate_application::credentials::ManageSshKeys;
 use sallygate_application::inventory::{
     DeleteHost, HostRepository, ImportSshConfig, ListHosts, SaveHost,
 };
@@ -12,6 +13,7 @@ use sallygate_application::sessions::{
 use sallygate_application::snippets::ManageSnippets;
 use sallygate_application::transfer::{BrowseRemoteFiles, OpenFileSystems, TransferFiles};
 use sallygate_application::trust::{KnownHosts, ManageKnownHosts, TrustHostKey};
+use sallygate_infrastructure::credentials::SshFolderKeyStore;
 use sallygate_infrastructure::inventory::{JsonHostRepository, SshConfigFile};
 use sallygate_infrastructure::sessions::RusshConnector;
 use sallygate_infrastructure::snippets::JsonSnippetRepository;
@@ -33,6 +35,7 @@ pub struct AppServices {
     pub transfer_files: TransferFiles,
     pub snippets: ManageSnippets,
     pub known_hosts: ManageKnownHosts,
+    pub ssh_keys: ManageSshKeys,
 }
 
 #[derive(Debug, Error)]
@@ -54,6 +57,7 @@ pub fn compose(app_data_folder: &Path) -> Result<AppServices, CompositionError> 
     let known_hosts: Arc<dyn KnownHosts> =
         Arc::new(KnownHostsFile::new(ssh_folder.join("known_hosts")));
     let local_username = std::env::var("USER").unwrap_or_default();
+    let key_folder = ssh_folder.clone();
     let ssh_config = Arc::new(SshConfigFile::new(
         ssh_folder.join("config"),
         ssh_folder,
@@ -79,6 +83,10 @@ pub fn compose(app_data_folder: &Path) -> Result<AppServices, CompositionError> 
         close_session: CloseSession::new(registry),
         trust_host_key: TrustHostKey::new(Arc::clone(&known_hosts)),
         known_hosts: ManageKnownHosts::new(known_hosts),
+        ssh_keys: ManageSshKeys::new(Arc::new(SshFolderKeyStore::new(
+            key_folder,
+            "~/.ssh".to_owned(),
+        ))),
         browse_remote_files: BrowseRemoteFiles::new(Arc::clone(&file_systems)),
         transfer_files: TransferFiles::new(file_systems),
         snippets: ManageSnippets::new(Arc::new(JsonSnippetRepository::new(

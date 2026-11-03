@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { KeysView } from '../credentials/keys-view';
 import { HostDrawer } from '../inventory/host-drawer';
 import { HostsView } from '../inventory/hosts-view';
 import type { THost, TSaveHostRequest } from '../inventory/inventory-contract';
@@ -92,6 +93,7 @@ export function App() {
               onDelete={snippets.deleteSnippet}
             />
           ) : null}
+          {view === 'keys' ? <KeysView hosts={hosts} /> : null}
           {view === 'knownHosts' ? <KnownHostsView /> : null}
         </HomeView>
       </HomePanel>

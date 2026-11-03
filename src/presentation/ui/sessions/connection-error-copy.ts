@@ -68,4 +68,8 @@ export const CONNECTION_ERROR_COPY: Record<TCommandErrorKind, TErrorCopy> = {
     title: 'Could not use the saved snippets',
     hint: 'Sallygate keeps them in its data folder; check that it can be read and written.',
   },
+  keyStoreUnavailable: {
+    title: 'Could not use ~/.ssh',
+    hint: 'Check that the folder exists and can be read and written by your user.',
+  },
 };

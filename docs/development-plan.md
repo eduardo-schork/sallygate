@@ -6,12 +6,12 @@ The step-by-step plan for building Sallygate, and the place where progress is tr
 
 ## Current focus
 
-- **Stage:** 4 — Power tools. Side menu, snippets and known hosts are built; next: SSH keys, port forwarding, jump host.
+- **Stage:** 4 — Power tools. Side menu, snippets, known hosts and SSH keys are built; next: port forwarding, jump host.
 - **What works today:** save, edit and delete hosts in groups (`hosts.json`); search; connect with a private key file (passphrase typed at connect time) or a password typed at connect time, never saved; import hosts from `~/.ssh/config`; browse a server's files from a session tab, upload, download, create, rename and delete; save snippets and send them to a terminal from its side panel; confirm an unknown server key, block a changed one; a resizable terminal per tab; several tabs at once; closing a tab closes its session.
 - **Next tasks, in order:**
   1. Owner: check the password dialog in the native window (background clicks cannot reach the webview).
   2. Owner: try the Files view on the Docker test server in the native window.
-  3. Stage 4, in order: SSH keys screen, port forwarding, jump host.
+  3. Stage 4, in order: port forwarding, jump host.
   4. Cut `release/0.1.0` and `release/0.2.0` when the owner asks (no week-long trial).
 - **Owner to do:** `exit` from a shell on their server; make `develop` the default branch on GitHub; register `sallygate.com`; reserve the `sallygate` crate.
 - **Open questions:** see [architecture.md](architecture.md#open-questions).
@@ -97,7 +97,7 @@ Update this block whenever the focus moves.
 
 ## Stage 4 — Power tools (0.3.0)
 
-- [ ] SSH keys screen: list, generate Ed25519, import, copy public key
+- [x] SSH keys screen: lists private keys in `~/.ssh` with the hosts that use them, generates Ed25519 (optional passphrase, files 0600/0644, never overwrites), imports a key file, copies the public key
 - [x] Side menu in the Sallygate tab (Hosts, Snippets, then each new screen), following the owner's prototype; Vault teaser at the bottom
 - [x] Snippets: `snippets` context (`snippets.json`), Snippets screen, panel beside the terminal that types a snippet and presses Enter
 - [ ] Port forwarding: local, remote and SOCKS rules with on/off switches
@@ -119,6 +119,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-03** — SSH keys screen: `KeyStore` port, `SshFolderKeyStore` (ssh-key via russh, `rand` 0.10 already in the tree), `ManageSshKeys`, commands, screen with generate dialog, import and copy. `bun run check` passes (81 UI tests).
 - **2026-11-03** — Known hosts screen: `KnownHosts` port gains `entries` and `forget` (exact line, refused if it moved), `ManageKnownHosts`, commands, screen in the side menu. `bun run check` passes (78 UI tests).
 - **2026-11-03** — Stage 4 starts: side menu and "Sallygate" home tab after the owner's prototype; snippets (domain, `ManageSnippets`, `JsonSnippetRepository`, commands, screen, terminal side panel). Shared `json_file` helper for atomic JSON writes. `bun run check` passes (77 UI tests). Checked in the browser pane with a mocked core.
 - **2026-11-03** — Stage 3 SFTP: `transfer` context over the session's connection (ADR-0017), Tauri commands with a progress channel, Files view with transfers. `bun run check:full` passes (69 UI tests; 12 integration tests, one new for SFTP). Test server: `PerSourcePenalties no`, since OpenSSH 10 penalized the tests' deliberate pre-login disconnects. Checked the Files view in the browser pane with a mocked core (list, open a folder, download progress).
