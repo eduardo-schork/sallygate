@@ -6,4 +6,6 @@ export type THostFormProps = {
   /** The `id` of the form element, so buttons outside it can submit it. */
   readonly formId: string;
   readonly onSubmit: (request: TSaveHostRequest) => void;
+  /** The saved hosts this one can go through (`ProxyJump`). */
+  readonly jumpCandidates: THost[];
 };

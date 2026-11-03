@@ -1,3 +1,4 @@
+use sallygate_application::sessions::JumpHost;
 use sallygate_domain::credentials::{AuthMethod, KeyFilePath, Secret};
 use sallygate_domain::inventory::{HostAddress, Port, SshEndpoint, Username};
 use serde::{Deserialize, Serialize};
@@ -86,6 +87,28 @@ impl AuthDto {
     }
 }
 
+/// A host to go through first (`ProxyJump`); it logs in with its key, never a typed secret.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(
+    rename = "TJumpHost",
+    export,
+    export_to = "../../ui/sessions/sessions-contract.ts"
+)]
+pub struct JumpHostDto {
+    pub endpoint: EndpointDto,
+    pub auth: AuthDto,
+}
+
+impl JumpHostDto {
+    pub fn into_domain(self) -> Result<JumpHost, CommandError> {
+        Ok(JumpHost {
+            endpoint: self.endpoint.into_domain()?,
+            auth: self.auth.into_domain()?,
+        })
+    }
+}
+
 /// Open a terminal on `endpoint`. `secret` is the password or key passphrase the user
 /// just typed; it is used once and never saved (ADR-0015). No `Debug`, so it never prints.
 #[derive(Deserialize, TS)]
@@ -98,6 +121,8 @@ impl AuthDto {
 pub struct OpenSessionRequest {
     pub endpoint: EndpointDto,
     pub auth: AuthDto,
+    #[ts(optional)]
+    pub jump: Option<JumpHostDto>,
     #[ts(optional)]
     pub secret: Option<String>,
     pub columns: u16,

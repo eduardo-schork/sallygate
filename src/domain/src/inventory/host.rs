@@ -10,6 +10,8 @@ pub struct Host {
     endpoint: SshEndpoint,
     auth: AuthMethod,
     group: Option<GroupName>,
+    /// Reached through this saved host first (`ProxyJump`).
+    via: Option<HostId>,
 }
 
 impl Host {
@@ -27,7 +29,15 @@ impl Host {
             endpoint,
             auth,
             group,
+            via: None,
         }
+    }
+
+    /// The same host, reached through another saved host first (`ProxyJump`).
+    #[must_use]
+    pub fn with_jump_host(mut self, jump_host: Option<HostId>) -> Self {
+        self.via = jump_host;
+        self
     }
 
     #[must_use]
@@ -53,5 +63,10 @@ impl Host {
     #[must_use]
     pub fn group(&self) -> Option<&GroupName> {
         self.group.as_ref()
+    }
+
+    #[must_use]
+    pub fn jump_host(&self) -> Option<HostId> {
+        self.via
     }
 }

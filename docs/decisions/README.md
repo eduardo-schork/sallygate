@@ -22,3 +22,4 @@ One file per decision, numbered in order. Copy [0000-template.md](0000-template.
 | [0016](0016-sallygate-brand-theme.md)                       | Sallygate brand theme on top of faber-ui                             | Accepted                                  |
 | [0017](0017-sftp-over-the-session-connection.md)            | SFTP runs over the open session's connection                         | Accepted                                  |
 | [0018](0018-port-forwarding-rules.md)                       | Port forwarding rules, one SSH connection each                       | Accepted                                  |
+| [0019](0019-jump-hosts.md)                                  | Jump hosts go through a saved host that needs no typed secret        | Accepted                                  |

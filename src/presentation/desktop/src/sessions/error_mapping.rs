@@ -15,6 +15,7 @@ pub fn from_open_session_error(error: OpenSessionError) -> CommandError {
         OpenSessionError::KeyFileUnreadable(_) => (CommandErrorKind::KeyFileUnreadable, None),
         OpenSessionError::Unreachable(_) => (CommandErrorKind::Unreachable, None),
         OpenSessionError::Protocol(_) => (CommandErrorKind::ConnectionFailed, None),
+        OpenSessionError::JumpHost(_) => (CommandErrorKind::JumpHostFailed, None),
         OpenSessionError::KnownHosts(_) => (CommandErrorKind::KnownHostsUnavailable, None),
     };
 

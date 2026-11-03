@@ -6,7 +6,7 @@ import { HostForm } from './host-form.ui';
 describe('HostForm', () => {
   it('SHOULD build a save request from what the user typed', () => {
     const onSubmit = vi.fn();
-    render(<HostForm formId="host-form" onSubmit={onSubmit} />);
+    render(<HostForm formId="host-form" jumpCandidates={[]} onSubmit={onSubmit} />);
 
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'oracle-vps' } });
     fireEvent.change(screen.getByLabelText('Group'), { target: { value: 'Cloud' } });
@@ -27,6 +27,7 @@ describe('HostForm', () => {
     render(
       <HostForm
         formId="host-form"
+        jumpCandidates={[]}
         host={{
           id: 'host-1',
           label: 'web',
@@ -44,7 +45,7 @@ describe('HostForm', () => {
 
   it('SHOULD save a password host without asking for the password', () => {
     const onSubmit = vi.fn();
-    render(<HostForm formId="host-form" onSubmit={onSubmit} />);
+    render(<HostForm formId="host-form" jumpCandidates={[]} onSubmit={onSubmit} />);
 
     fireEvent.click(screen.getByLabelText('Password'));
     fireEvent.submit(screen.getByRole('form', { name: 'New host' }));
@@ -58,6 +59,7 @@ describe('HostForm', () => {
     render(
       <HostForm
         formId="host-form"
+        jumpCandidates={[]}
         host={{
           id: 'host-1',
           label: 'home',
@@ -71,5 +73,24 @@ describe('HostForm', () => {
     fireEvent.submit(screen.getByRole('form', { name: 'Edit host' }));
 
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ auth: { type: 'password' } }));
+  });
+
+  it('SHOULD go through the jump host the user picks', () => {
+    const onSubmit = vi.fn();
+    const bastion = {
+      id: 'bastion-id',
+      label: 'bastion',
+      endpoint: { address: '10.0.0.1', port: 22, username: 'ubuntu' },
+      auth: { type: 'keyFile' as const, path: '~/.ssh/id_ed25519' },
+    };
+    render(<HostForm formId="host-form" jumpCandidates={[bastion]} onSubmit={onSubmit} />);
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'inner' } });
+    fireEvent.change(screen.getByLabelText('Address'), { target: { value: '192.168.0.9' } });
+    fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'ubuntu' } });
+    fireEvent.change(screen.getByLabelText(/Jump host/u), { target: { value: 'bastion-id' } });
+    fireEvent.submit(screen.getByRole('form', { name: 'New host' }));
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ jumpHostId: 'bastion-id' }));
   });
 });

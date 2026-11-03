@@ -22,6 +22,10 @@ pub struct HostDto {
     #[ts(optional)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub group: Option<String>,
+    /// The saved host to go through first (`ProxyJump`).
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub jump_host_id: Option<String>,
 }
 
 impl From<&Host> for HostDto {
@@ -32,6 +36,7 @@ impl From<&Host> for HostDto {
             endpoint: EndpointDto::from(host.endpoint()),
             auth: AuthDto::from(host.auth()),
             group: host.group().map(ToString::to_string),
+            jump_host_id: host.jump_host().map(|id| id.to_string()),
         }
     }
 }
@@ -97,6 +102,9 @@ pub struct SaveHostRequest {
     /// Empty or missing means no group.
     #[ts(optional)]
     pub group: Option<String>,
+    /// Missing means a direct connection.
+    #[ts(optional)]
+    pub jump_host_id: Option<String>,
 }
 
 impl SaveHostRequest {
@@ -111,13 +119,24 @@ impl SaveHostRequest {
             Some(name) => Some(GroupName::parse(name).map_err(|error| invalid(&error))?),
         };
 
+        let jump_host = match self.jump_host_id.as_deref() {
+            None | Some("") => None,
+            Some(jump_id) => Some(jump_id.parse::<HostId>().map_err(|error| invalid(&error))?),
+        };
+        if jump_host == Some(id) {
+            return Err(CommandError::invalid_input(
+                &"a host cannot be its own jump host",
+            ));
+        }
+
         Ok(Host::new(
             id,
             HostLabel::parse(&self.label).map_err(|error| invalid(&error))?,
             self.endpoint.into_domain()?,
             self.auth.into_domain()?,
             group,
-        ))
+        )
+        .with_jump_host(jump_host))
     }
 }
 
@@ -138,6 +157,7 @@ mod tests {
                 path: "~/.ssh/id_ed25519".to_owned(),
             },
             group: group.map(ToOwned::to_owned),
+            jump_host_id: None,
         }
     }
 

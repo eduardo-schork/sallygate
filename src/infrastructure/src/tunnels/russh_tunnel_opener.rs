@@ -12,7 +12,7 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio::task::JoinHandle;
 
 use super::socks5;
-use crate::sessions::{LogIn, ServerKeyCheck, client_config, log_in, protocol_error};
+use crate::sessions::{Connected, LogIn, ServerKeyCheck, client_config, log_in, protocol_error};
 
 /// Tunnels listen on this computer only, never on the network.
 const LISTEN_ADDRESS: &str = "127.0.0.1";
@@ -44,6 +44,8 @@ type Connection = Arc<client::Handle<ServerKeyCheck>>;
 
 struct RusshLiveTunnel {
     connection: Connection,
+    /// Kept open while the rule runs through it.
+    jump: Option<client::Handle<ServerKeyCheck>>,
     accepting: JoinHandle<()>,
 }
 
@@ -56,6 +58,9 @@ impl LiveTunnel for RusshLiveTunnel {
             .connection
             .disconnect(Disconnect::ByApplication, "", "en")
             .await;
+        if let Some(jump) = &self.jump {
+            let _ = jump.disconnect(Disconnect::ByApplication, "", "en").await;
+        }
     }
 }
 
@@ -74,21 +79,22 @@ impl TunnelOpener for RusshTunnelOpener {
                     std::io::ErrorKind::AddrInUse => OpenTunnelError::PortInUse(port),
                     _ => OpenTunnelError::Connect(OpenSessionError::Protocol(error.to_string())),
                 })?;
-        let connection = Arc::new(
-            log_in(
-                Arc::clone(&self.config),
-                LogIn {
-                    endpoint: &request.endpoint,
-                    auth: &request.auth,
-                    secret: request.secret.as_ref(),
-                    known_hosts: request.known_hosts,
-                },
-            )
-            .await?,
-        );
+        let Connected { connection, jump } = log_in(
+            Arc::clone(&self.config),
+            LogIn {
+                endpoint: &request.endpoint,
+                auth: &request.auth,
+                secret: request.secret.as_ref(),
+                known_hosts: request.known_hosts,
+                jump: request.jump.as_ref(),
+            },
+        )
+        .await?;
+        let connection = Arc::new(connection);
         let accepting = tokio::spawn(accept(listener, Arc::clone(&connection), request.kind));
         Ok(Arc::new(RusshLiveTunnel {
             connection,
+            jump,
             accepting,
         }))
     }

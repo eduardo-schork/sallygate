@@ -93,6 +93,8 @@ struct HostRecord {
     auth: AuthRecord,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     group: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    jump_host_id: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -120,6 +122,7 @@ impl HostRecord {
                 AuthMethod::Password => AuthRecord::Password,
             },
             group: host.group().map(ToString::to_string),
+            jump_host_id: host.jump_host().map(|id| id.to_string()),
         }
     }
 
@@ -151,6 +154,15 @@ impl HostRecord {
                 .map(GroupName::parse)
                 .transpose()
                 .map_err(|error| invalid(error.to_string()))?,
+        )
+        .with_jump_host(
+            self.jump_host_id
+                .as_deref()
+                .map(str::parse)
+                .transpose()
+                .map_err(|error: sallygate_domain::inventory::InventoryError| {
+                    invalid(error.to_string())
+                })?,
         ))
     }
 }
@@ -253,5 +265,21 @@ mod tests {
 
         assert!(contents.contains(r#""path": "~/.ssh/id_ed25519""#));
         assert!(!contents.contains("PRIVATE KEY"));
+    }
+
+    #[test]
+    fn keeps_the_jump_host_of_a_host() {
+        let folder = tempfile::tempdir().unwrap();
+        let path = folder.path().join("hosts.json");
+        let bastion = host("bastion", None);
+        let inner = host("inner", None).with_jump_host(Some(bastion.id()));
+        let repository = JsonHostRepository::new(path.clone());
+        repository.save(&bastion).unwrap();
+        repository.save(&inner).unwrap();
+
+        let saved = JsonHostRepository::new(path).all().unwrap();
+
+        assert_eq!(saved[1].jump_host(), Some(bastion.id()));
+        assert_eq!(saved[0].jump_host(), None);
     }
 }

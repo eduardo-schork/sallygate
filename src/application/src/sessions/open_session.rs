@@ -5,13 +5,16 @@ use sallygate_domain::credentials::{AuthMethod, Secret};
 use sallygate_domain::inventory::SshEndpoint;
 use sallygate_domain::sessions::{SessionEnd, SessionId, TerminalSize};
 
-use super::{ConnectRequest, OpenSessionError, SessionOutput, SessionRegistry, SshConnector};
+use super::{
+    ConnectRequest, JumpHost, OpenSessionError, SessionOutput, SessionRegistry, SshConnector,
+};
 use crate::trust::KnownHosts;
 
 /// What the user asked to open.
 pub struct OpenSessionInput {
     pub endpoint: SshEndpoint,
     pub auth: AuthMethod,
+    pub jump: Option<JumpHost>,
     pub secret: Option<Secret>,
     pub size: TerminalSize,
 }
@@ -61,6 +64,7 @@ impl OpenSession {
             .connect(ConnectRequest {
                 endpoint: input.endpoint,
                 auth: input.auth,
+                jump: input.jump,
                 secret: input.secret,
                 size: input.size,
                 known_hosts: Arc::clone(&self.known_hosts),

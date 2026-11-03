@@ -20,5 +20,5 @@ pub use resize_session::ResizeSession;
 pub use session_command_error::SessionCommandError;
 pub use session_output::SessionOutput;
 pub use session_registry::SessionRegistry;
-pub use ssh_connector::{ConnectRequest, OpenSessionError, SshConnector};
+pub use ssh_connector::{ConnectRequest, JumpHost, OpenSessionError, SshConnector};
 pub use write_to_session::WriteToSession;

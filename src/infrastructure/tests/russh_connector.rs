@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use sallygate_application::sessions::{
-    ConnectRequest, LiveSession, OpenSessionError, SessionOutput, SshConnector,
+    ConnectRequest, JumpHost, LiveSession, OpenSessionError, SessionOutput, SshConnector,
 };
 use sallygate_application::trust::KnownHosts;
 use sallygate_domain::credentials::{AuthMethod, KeyFilePath, Secret};
@@ -101,11 +101,26 @@ impl TestServer {
         Result<Arc<dyn LiveSession>, OpenSessionError>,
         Arc<RecordingOutput>,
     ) {
+        self.connect_through(Self::endpoint(username, port), auth, secret, None)
+            .await
+    }
+
+    async fn connect_through(
+        &self,
+        endpoint: SshEndpoint,
+        auth: AuthMethod,
+        secret: Option<Secret>,
+        jump: Option<JumpHost>,
+    ) -> (
+        Result<Arc<dyn LiveSession>, OpenSessionError>,
+        Arc<RecordingOutput>,
+    ) {
         let output = Arc::new(RecordingOutput::default());
         let result = RusshConnector::new()
             .connect(ConnectRequest {
-                endpoint: Self::endpoint(username, port),
+                endpoint,
                 auth,
+                jump,
                 secret,
                 size: TerminalSize::new(80, 24).unwrap(),
                 known_hosts: Arc::clone(&self.known_hosts) as Arc<dyn KnownHosts>,
@@ -364,4 +379,70 @@ async fn browses_and_copies_files_over_the_session_connection() {
             .any(|entry| entry.path == folder)
     );
     session.close().await.unwrap();
+}
+
+#[tokio::test]
+#[ignore = "needs the SSH test server: scripts/test-ssh-server.sh up"]
+async fn connects_through_a_jump_host() {
+    let server = TestServer::new();
+    // Trusting the server on its published port makes it a usable jump host.
+    let (direct, _) = server.trusted_session().await;
+    direct.close().await.unwrap();
+    let jump = JumpHost {
+        endpoint: TestServer::endpoint("sallygate", TEST_SERVER_PORT),
+        auth: TestServer::key_file(),
+    };
+    // Seen from the jump host, the same server answers on its own port 22.
+    let target = TestServer::endpoint("sallygate", 22);
+
+    let (first, _) = server
+        .connect_through(
+            target.clone(),
+            TestServer::key_file(),
+            None,
+            Some(jump.clone()),
+        )
+        .await;
+    let Err(OpenSessionError::UnknownHostKey(host_key)) = first else {
+        panic!(
+            "expected the target's key to be unknown, got {:?}",
+            first.err()
+        );
+    };
+    server.known_hosts.trust(&target, &host_key).unwrap();
+    let (session, output) = server
+        .connect_through(target, TestServer::key_file(), None, Some(jump))
+        .await;
+    let session = session.unwrap();
+    session.write(b"echo via-$((40 + 2))\n").await.unwrap();
+
+    wait_until("the command output arrives", || {
+        output.text().contains("via-42")
+    })
+    .await;
+    session.close().await.unwrap();
+}
+
+#[tokio::test]
+#[ignore = "needs the SSH test server: scripts/test-ssh-server.sh up"]
+async fn asks_to_trust_an_unknown_jump_host_on_its_own() {
+    let server = TestServer::new();
+    let jump = JumpHost {
+        endpoint: TestServer::endpoint("sallygate", TEST_SERVER_PORT),
+        auth: TestServer::key_file(),
+    };
+
+    let (result, _) = server
+        .connect_through(
+            TestServer::endpoint("sallygate", 22),
+            TestServer::key_file(),
+            None,
+            Some(jump),
+        )
+        .await;
+
+    let Err(OpenSessionError::JumpHost(reason)) = result else {
+        panic!("expected a jump host error, got {:?}", result.err());
+    };
+    assert!(reason.contains("on its own first"), "{reason}");
 }

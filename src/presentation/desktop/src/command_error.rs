@@ -48,6 +48,7 @@ pub enum CommandErrorKind {
     KeyStoreUnavailable,
     TunnelStoreUnavailable,
     PortInUse,
+    JumpHostFailed,
 }
 
 impl CommandError {

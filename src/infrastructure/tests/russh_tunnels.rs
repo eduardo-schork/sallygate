@@ -38,6 +38,7 @@ fn request(known_hosts: Arc<KnownHostsFile>, kind: TunnelKind) -> OpenTunnelRequ
     OpenTunnelRequest {
         endpoint: endpoint(),
         auth: key_file(),
+        jump: None,
         secret: None,
         known_hosts,
         kind,

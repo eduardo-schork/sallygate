@@ -11,10 +11,15 @@ export type TAuth = { "type": "keyFile", path: string, } | { "type": "password" 
 export type TEndpoint = { address: string, port: number, username: string, };
 
 /**
+ * A host to go through first (`ProxyJump`); it logs in with its key, never a typed secret.
+ */
+export type TJumpHost = { endpoint: TEndpoint, auth: TAuth, };
+
+/**
  * Open a terminal on `endpoint`. `secret` is the password or key passphrase the user
  * just typed; it is used once and never saved (ADR-0015). No `Debug`, so it never prints.
  */
-export type TOpenSessionRequest = { endpoint: TEndpoint, auth: TAuth, secret?: string, columns: number, rows: number, };
+export type TOpenSessionRequest = { endpoint: TEndpoint, auth: TAuth, jump?: TJumpHost, secret?: string, columns: number, rows: number, };
 
 /**
  * Everything a session tells the UI after it opens, in order.

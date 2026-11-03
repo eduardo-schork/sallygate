@@ -10,4 +10,6 @@ export type THostDrawerProps = {
   readonly onSave: (request: TSaveHostRequest) => void;
   readonly onDelete: (host: THost) => void;
   readonly onClose: () => void;
+  /** Every saved host, to offer as a jump host. */
+  readonly hosts: THost[];
 };

@@ -60,7 +60,9 @@ export function App() {
   };
 
   const connectTo = (host: THost) => {
-    openTab(host.label, createSessionRequest(host.endpoint, host.auth));
+    const jumpHost = hosts.find((saved) => saved.id === host.jumpHostId);
+    const jump = jumpHost ? { endpoint: jumpHost.endpoint, auth: jumpHost.auth } : undefined;
+    openTab(host.label, createSessionRequest(host.endpoint, host.auth, jump));
   };
 
   return (
@@ -116,6 +118,7 @@ export function App() {
         onSave={(request) => void handleSave(request)}
         onDelete={(host) => void handleDelete(host)}
         onClose={() => setDrawer({ isOpen: false })}
+        hosts={hosts}
       />
     </AppRoot>
   );

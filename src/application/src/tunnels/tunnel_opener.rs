@@ -6,7 +6,7 @@ use sallygate_domain::inventory::SshEndpoint;
 use sallygate_domain::tunnels::TunnelKind;
 use thiserror::Error;
 
-use crate::sessions::OpenSessionError;
+use crate::sessions::{JumpHost, OpenSessionError};
 use crate::trust::KnownHosts;
 
 /// Port: logs in to a host and forwards a local port through it.
@@ -22,6 +22,7 @@ pub trait TunnelOpener: Send + Sync {
 pub struct OpenTunnelRequest {
     pub endpoint: SshEndpoint,
     pub auth: AuthMethod,
+    pub jump: Option<JumpHost>,
     pub secret: Option<Secret>,
     pub known_hosts: Arc<dyn KnownHosts>,
     pub kind: TunnelKind,

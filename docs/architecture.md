@@ -214,7 +214,7 @@ _Planned:_ tags, a jump host, and password and ssh-agent auth.
 
 - **`tunnels.json`** in the app data folder: forwarding rules (host id, kind, ports), versioned, written atomically.
 - **`snippets.json`** in the app data folder: saved snippets (name and command), versioned, written atomically like `hosts.json`.
-- **`hosts.json`** in the app data folder (on macOS `~/Library/Application Support/dev.sallygate.app/`): saved hosts and their groups, versioned (`"version": 1`), written atomically. No secrets, only the key file path.
+- **`hosts.json`** in the app data folder (each host may name a jump host by id, ADR-0019) (on macOS `~/Library/Application Support/dev.sallygate.app/`): saved hosts and their groups, versioned (`"version": 1`), written atomically. No secrets, only the key file path.
 - **`~/.ssh/known_hosts`**: trusted server keys, shared with the `ssh` command. Sallygate writes to it only after the user trusts a key.
 - **`~/.ssh/config`**: read, never written, when the user imports it (`SshConfigFile`). Imported hosts land in the "SSH config" group; importing again adds only hosts not saved yet (same address, port and username).
 - **Private key files** are read when a session opens and are never copied.

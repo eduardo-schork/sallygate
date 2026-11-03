@@ -21,10 +21,18 @@ pub trait SshConnector: Send + Sync {
     ) -> Result<Arc<dyn LiveSession>, OpenSessionError>;
 }
 
+/// A host to go through first (`ProxyJump`). It logs in with its key and no typed secret.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct JumpHost {
+    pub endpoint: SshEndpoint,
+    pub auth: AuthMethod,
+}
+
 /// Everything a connector needs to open one session.
 pub struct ConnectRequest {
     pub endpoint: SshEndpoint,
     pub auth: AuthMethod,
+    pub jump: Option<JumpHost>,
     /// The password or key passphrase, when the user typed one.
     pub secret: Option<Secret>,
     pub size: TerminalSize,
@@ -49,6 +57,8 @@ pub enum OpenSessionError {
     Unreachable(String),
     #[error("the SSH connection failed: {0}")]
     Protocol(String),
+    #[error("could not go through the jump host: {0}")]
+    JumpHost(String),
     #[error(transparent)]
     KnownHosts(#[from] KnownHostsError),
 }

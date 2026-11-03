@@ -14,4 +14,4 @@ message: string,
  */
 hostKey?: THostKey, };
 
-export type TCommandErrorKind = "invalidInput" | "unknownHostKey" | "hostKeyChanged" | "secretRequired" | "authenticationRejected" | "keyFileUnreadable" | "unreachable" | "connectionFailed" | "knownHostsUnavailable" | "hostStoreUnavailable" | "sshConfigUnreadable" | "sessionNotFound" | "sessionFailed" | "filesUnavailable" | "fileOperationFailed" | "snippetStoreUnavailable" | "keyStoreUnavailable" | "tunnelStoreUnavailable" | "portInUse";
+export type TCommandErrorKind = "invalidInput" | "unknownHostKey" | "hostKeyChanged" | "secretRequired" | "authenticationRejected" | "keyFileUnreadable" | "unreachable" | "connectionFailed" | "knownHostsUnavailable" | "hostStoreUnavailable" | "sshConfigUnreadable" | "sessionNotFound" | "sessionFailed" | "filesUnavailable" | "fileOperationFailed" | "snippetStoreUnavailable" | "keyStoreUnavailable" | "tunnelStoreUnavailable" | "portInUse" | "jumpHostFailed";

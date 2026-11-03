@@ -80,4 +80,8 @@ export const CONNECTION_ERROR_COPY: Record<TCommandErrorKind, TErrorCopy> = {
     title: 'That port is already in use on this Mac',
     hint: 'Another app or rule listens on it. Pick another port in the rule.',
   },
+  jumpHostFailed: {
+    title: 'Could not go through the jump host',
+    hint: 'Connect to the jump host on its own once, and give it a key without a passphrase.',
+  },
 };

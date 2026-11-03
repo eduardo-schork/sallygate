@@ -16,6 +16,7 @@ use crate::trust::{KnownHosts, KnownHostsError};
 
 pub fn open_input() -> OpenSessionInput {
     OpenSessionInput {
+        jump: None,
         endpoint: SshEndpoint::new(
             HostAddress::parse("example.com").unwrap(),
             Port::default(),

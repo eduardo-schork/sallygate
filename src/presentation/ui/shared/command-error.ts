@@ -21,6 +21,7 @@ const COMMAND_ERROR_KINDS: Record<TCommandErrorKind, true> = {
   keyStoreUnavailable: true,
   tunnelStoreUnavailable: true,
   portInUse: true,
+  jumpHostFailed: true,
 };
 
 /** Tauri rejects a failed command with the Rust `CommandError`; anything else is unexpected. */

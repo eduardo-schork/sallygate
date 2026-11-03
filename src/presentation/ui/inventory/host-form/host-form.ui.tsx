@@ -5,6 +5,7 @@ import {
   Input,
   Segment,
   SegmentedControl,
+  Select,
   Text,
   VFlex,
 } from '@faber-ui/react';
@@ -17,13 +18,14 @@ import type { THostFormProps } from './host-form.types';
 type TAuthType = 'keyFile' | 'password';
 
 /** Everything Sallygate needs to reach a server. Validation happens in the core. */
-export function HostForm({ host, formId, onSubmit }: THostFormProps) {
+export function HostForm({ host, formId, onSubmit, jumpCandidates }: THostFormProps) {
   const [label, setLabel] = useState(host?.label ?? '');
   const [group, setGroup] = useState(host?.group ?? '');
   const [address, setAddress] = useState(host?.endpoint.address ?? '');
   const [port, setPort] = useState(String(host?.endpoint.port ?? DEFAULT_SSH_PORT));
   const [username, setUsername] = useState(host?.endpoint.username ?? '');
   const [authType, setAuthType] = useState<TAuthType>(host?.auth.type ?? 'keyFile');
+  const [jumpHostId, setJumpHostId] = useState(host?.jumpHostId ?? '');
   const [keyFilePath, setKeyFilePath] = useState(
     host?.auth.type === 'keyFile' ? host.auth.path : DEFAULT_KEY_FILE_PATH,
   );
@@ -36,6 +38,7 @@ export function HostForm({ host, formId, onSubmit }: THostFormProps) {
       group,
       endpoint: { address, port: Number(port), username },
       auth: authType === 'keyFile' ? { type: 'keyFile', path: keyFilePath } : { type: 'password' },
+      ...(jumpHostId === '' ? {} : { jumpHostId }),
     });
   };
 
@@ -129,6 +132,25 @@ export function HostForm({ host, formId, onSubmit }: THostFormProps) {
             You type the password each time you connect. Sallygate never saves it.
           </Text.Small>
         )}
+        {jumpCandidates.length > 0 ? (
+          <Field
+            label="Jump host"
+            description="Go through this saved host first, for servers only it can reach. It must sign in with a key that has no passphrase."
+          >
+            <Select
+              name="jumpHostId"
+              value={jumpHostId}
+              onChange={(event) => setJumpHostId(event.target.value)}
+            >
+              <option value="">None, connect directly</option>
+              {jumpCandidates.map((candidate) => (
+                <option key={candidate.id} value={candidate.id}>
+                  {candidate.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        ) : null}
       </VFlex>
     </form>
   );

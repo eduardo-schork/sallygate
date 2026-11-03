@@ -22,6 +22,7 @@ export function HostDrawer({
   onSave,
   onDelete,
   onClose,
+  hosts,
 }: THostDrawerProps) {
   const formId = useId();
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -56,7 +57,13 @@ export function HostDrawer({
       >
         <VFlex gap="MD">
           {/* A new key per host resets the form's fields when another host is opened. */}
-          <HostForm key={host?.id ?? 'new'} host={host} formId={formId} onSubmit={onSave} />
+          <HostForm
+            key={host?.id ?? 'new'}
+            host={host}
+            formId={formId}
+            onSubmit={onSave}
+            jumpCandidates={hosts.filter((candidate) => candidate.id !== host?.id)}
+          />
           {error ? (
             <Alert color="error" title="The host was not saved" role="alert">
               {error.message}

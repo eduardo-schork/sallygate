@@ -6,13 +6,14 @@ The step-by-step plan for building Sallygate, and the place where progress is tr
 
 ## Current focus
 
-- **Stage:** 4 — Power tools. Side menu, snippets, known hosts, SSH keys and port forwarding are built; next: jump host.
-- **What works today:** save, edit and delete hosts in groups (`hosts.json`); search; connect with a private key file (passphrase typed at connect time) or a password typed at connect time, never saved; import hosts from `~/.ssh/config`; browse a server's files from a session tab, upload, download, create, rename and delete; save snippets and send them to a terminal from its side panel; manage SSH keys and known hosts; forward local ports and run a SOCKS proxy through a host; confirm an unknown server key, block a changed one; a resizable terminal per tab; several tabs at once; closing a tab closes its session.
+- **Stage:** 4 — Power tools, built: side menu, snippets, known hosts, SSH keys, port forwarding, jump host. Next: releases, then Stage 5 (vault).
+- **What works today:** save, edit and delete hosts in groups (`hosts.json`); search; connect with a private key file (passphrase typed at connect time) or a password typed at connect time, never saved; import hosts from `~/.ssh/config`; browse a server's files from a session tab, upload, download, create, rename and delete; save snippets and send them to a terminal from its side panel; manage SSH keys and known hosts; forward local ports and run a SOCKS proxy through a host; reach a server through a jump host; confirm an unknown server key, block a changed one; a resizable terminal per tab; several tabs at once; closing a tab closes its session.
 - **Next tasks, in order:**
   1. Owner: check the password dialog in the native window (background clicks cannot reach the webview).
   2. Owner: try the Files view on the Docker test server in the native window.
-  3. Stage 4: jump host (`ProxyJump`), then cut `release/0.3.0` when the owner asks.
-  4. Cut `release/0.1.0` and `release/0.2.0` when the owner asks (no week-long trial).
+  3. Cut `release/0.1.0` to `0.3.0` (or one `0.3.0`) when the owner asks.
+  4. Stage 5: the vault, starting with an ADR on its encryption design.
+  5. Cut `release/0.1.0` and `release/0.2.0` when the owner asks (no week-long trial).
 - **Owner to do:** `exit` from a shell on their server; make `develop` the default branch on GitHub; register `sallygate.com`; reserve the `sallygate` crate.
 - **Open questions:** see [architecture.md](architecture.md#open-questions).
 - **Known shortcuts:** `grep -rn "shortcut:" src` (a dropped tunnel still shows as on; `~/.ssh/config` `Include`/`Match` skipped); design-system gaps are listed in [architecture.md](architecture.md#design-system-gaps).
@@ -101,7 +102,7 @@ Update this block whenever the focus moves.
 - [x] Side menu in the Sallygate tab (Hosts, Snippets, then each new screen), following the owner's prototype; Vault teaser at the bottom
 - [x] Snippets: `snippets` context (`snippets.json`), Snippets screen, panel beside the terminal that types a snippet and presses Enter
 - [x] Port forwarding: local and SOCKS rules with on/off switches, one SSH connection per rule (ADR-0018); remote (`-R`) left for when it is asked for
-- [ ] Jump host (`ProxyJump`)
+- [x] Jump host (`ProxyJump`): a host may go through another saved host (trusted, key without passphrase), for terminals, SFTP and forwarding rules (ADR-0019)
 - [x] Known hosts screen: lists `~/.ssh/known_hosts` (hashed entries shown as hidden), forgets one line after confirming; refuses when the line moved since it was shown
 - [ ] Release `0.3.0`
 
@@ -119,6 +120,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-03** — Jump host: `Host` gains an optional jump host, `log_in` goes through it with `direct-tcpip` + `connect_stream`, sessions and rules keep the jump connection; host form field; ADR-0019. `bun run check:full` passes (84 UI tests; 17 integration tests, 2 new for jumps). Stage 4 is built.
 - **2026-11-03** — Port forwarding: `tunnels` context, shared `log_in` step extracted from the connector, `RusshTunnelOpener` (local and SOCKS5), `tunnels.json`, commands, screen with on/off switches that ask for the server key and password when needed. Test server allows TCP forwarding. `bun run check:full` passes (83 UI tests; 15 integration tests, 3 new for tunnels).
 - **2026-11-03** — SSH keys screen: `KeyStore` port, `SshFolderKeyStore` (ssh-key via russh, `rand` 0.10 already in the tree), `ManageSshKeys`, commands, screen with generate dialog, import and copy. `bun run check` passes (81 UI tests).
 - **2026-11-03** — Known hosts screen: `KnownHosts` port gains `entries` and `forget` (exact line, refused if it moved), `ManageKnownHosts`, commands, screen in the side menu. `bun run check` passes (78 UI tests).

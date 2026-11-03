@@ -37,6 +37,10 @@ pub async fn open_session(
         secret: request.take_secret(),
         endpoint: request.endpoint.into_domain()?,
         auth: request.auth.into_domain()?,
+        jump: request
+            .jump
+            .map(super::contract::JumpHostDto::into_domain)
+            .transpose()?,
         size: terminal_size(request.columns, request.rows)?,
     };
 

@@ -10,6 +10,7 @@ use super::{
     TunnelStoreError,
 };
 use crate::inventory::{HostRepository, HostStoreError};
+use crate::sessions::JumpHost;
 use crate::trust::KnownHosts;
 
 /// A saved rule and whether it is forwarding now.
@@ -118,17 +119,30 @@ impl ManageTunnels {
             .into_iter()
             .find(|tunnel| tunnel.id == tunnel_id)
             .ok_or(StartTunnelError::TunnelNotFound)?;
-        let host = self
-            .hosts
-            .all()?
-            .into_iter()
+        let hosts = self.hosts.all()?;
+        let host = hosts
+            .iter()
             .find(|host| host.id() == tunnel.host_id)
             .ok_or(StartTunnelError::HostNotFound)?;
+        let jump = match host.jump_host() {
+            None => None,
+            Some(jump_id) => {
+                let jump = hosts
+                    .iter()
+                    .find(|saved| saved.id() == jump_id)
+                    .ok_or(StartTunnelError::HostNotFound)?;
+                Some(JumpHost {
+                    endpoint: jump.endpoint().clone(),
+                    auth: jump.auth().clone(),
+                })
+            }
+        };
         let live = self
             .opener
             .open(OpenTunnelRequest {
                 endpoint: host.endpoint().clone(),
                 auth: host.auth().clone(),
+                jump,
                 secret,
                 known_hosts: Arc::clone(&self.known_hosts),
                 kind: tunnel.kind,

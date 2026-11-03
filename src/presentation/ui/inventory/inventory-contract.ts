@@ -4,7 +4,11 @@ import type { TAuth, TEndpoint } from "../sessions/sessions-contract";
 /**
  * A saved host as the UI shows it.
  */
-export type THost = { id: string, label: string, endpoint: TEndpoint, auth: TAuth, group?: string, };
+export type THost = { id: string, label: string, endpoint: TEndpoint, auth: TAuth, group?: string, 
+/**
+ * The saved host to go through first (`ProxyJump`).
+ */
+jumpHostId?: string, };
 
 /**
  * What an import of `~/.ssh/config` did.
@@ -23,4 +27,8 @@ export type TSaveHostRequest = { id?: string, label: string, endpoint: TEndpoint
 /**
  * Empty or missing means no group.
  */
-group?: string, };
+group?: string, 
+/**
+ * Missing means a direct connection.
+ */
+jumpHostId?: string, };

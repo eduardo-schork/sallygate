@@ -14,6 +14,8 @@ use crate::transfer::SftpRemoteFiles;
 /// One shell over one SSH connection. Output is read by a background task.
 pub(super) struct RusshLiveSession {
     connection: client::Handle<ServerKeyCheck>,
+    /// Kept open while the session runs through it; closed with the session.
+    jump: Option<client::Handle<ServerKeyCheck>>,
     writer: ChannelWriteHalf<client::Msg>,
     is_closed_by_user: Arc<AtomicBool>,
 }
@@ -21,6 +23,7 @@ pub(super) struct RusshLiveSession {
 impl RusshLiveSession {
     pub(super) fn start(
         connection: client::Handle<ServerKeyCheck>,
+        jump: Option<client::Handle<ServerKeyCheck>>,
         reader: ChannelReadHalf,
         writer: ChannelWriteHalf<client::Msg>,
         output: Arc<dyn SessionOutput>,
@@ -34,6 +37,7 @@ impl RusshLiveSession {
 
         Self {
             connection,
+            jump,
             writer,
             is_closed_by_user,
         }
@@ -109,9 +113,15 @@ impl LiveSession for RusshLiveSession {
 
     async fn close(&self) -> Result<(), LiveSessionError> {
         self.is_closed_by_user.store(true, Ordering::SeqCst);
-        self.connection
+        let closed = self
+            .connection
             .disconnect(Disconnect::ByApplication, "", "en")
             .await
-            .map_err(|error| session_error(&error))
+            .map_err(|error| session_error(&error));
+        if let Some(jump) = &self.jump {
+            // The session is already closed; a jump host that is gone needs no goodbye.
+            let _ = jump.disconnect(Disconnect::ByApplication, "", "en").await;
+        }
+        closed
     }
 }
