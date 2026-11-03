@@ -57,4 +57,24 @@ describe('useSessionTabs', () => {
 
     expect(result.current.activeTabId).toBe(HOSTS_TAB_ID);
   });
+
+  it('SHOULD split open sessions, showing the first when asked from the Sallygate tab', () => {
+    const { result } = renderHook(() => useSessionTabs());
+    act(() => {
+      result.current.openTab('web', request);
+      result.current.openTab('db', request);
+      result.current.selectTab(HOSTS_TAB_ID);
+    });
+
+    act(() => {
+      result.current.toggleSplit();
+    });
+    expect(result.current.isSplit).toBe(true);
+    expect(result.current.activeTabId).toBe(result.current.tabs[0]?.id);
+
+    act(() => {
+      result.current.closeTab(result.current.tabs[1]?.id ?? '');
+    });
+    expect(result.current.isSplit).toBe(false);
+  });
 });

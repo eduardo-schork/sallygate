@@ -5,4 +5,6 @@ export type TSessionTabBarProps = {
   readonly activeTabId: string;
   readonly onSelect: (tabId: string) => void;
   readonly onClose: (tabId: string) => void;
+  readonly isSplit: boolean;
+  readonly onToggleSplit: () => void;
 };

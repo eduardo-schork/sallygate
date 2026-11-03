@@ -48,3 +48,18 @@ export const SessionTabButton = styled.button`
     border-radius: ${RADII.SM};
   }
 `;
+
+/** Window-wide controls, pushed to the end of the tab bar. */
+export const SessionTabBarTools = styled(HFlex)`
+  flex: none;
+  align-items: center;
+  margin-inline-start: auto;
+  padding-block-end: ${SPACINGS.XXS};
+`;
+
+export const SessionTabList = styled(HFlex)`
+  flex: 1;
+  min-inline-size: 0;
+  gap: ${SPACINGS.XXS};
+  overflow-x: auto;
+`;

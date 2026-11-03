@@ -121,7 +121,8 @@ src/
     │       ├── command_error.rs    the error every command returns
     │       └── composition.rs      builds adapters and use cases (the only place that knows them)
     └── ui/                     TypeScript: React + faber-ui, inside the desktop window
-        ├── app/                entry point, theme, the window (tabs, side menu app-side-nav/, sessions)
+        ├── app/                entry point, theme, the window (tab bar, side menu app-side-nav/, a
+        │                       screen, one session or a split grid of sessions)
         ├── credentials/        credentials-gateway.ts, credentials-contract.ts (generated), use-ssh-keys.ts,
         │                       key-users.ts, keys-view/, generate-key-dialog/
         ├── inventory/          inventory-gateway.ts, inventory-contract.ts (generated), use-hosts.ts,

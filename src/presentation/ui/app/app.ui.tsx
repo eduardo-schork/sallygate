@@ -15,15 +15,22 @@ import { KnownHostsView } from '../trust/known-hosts-view';
 import { ForwardingView } from '../tunnels/forwarding-view';
 import { useSnippets } from '../snippets/use-snippets';
 import { AppSideNav, type TAppView } from './app-side-nav';
-import { AppRoot, HomePanel, HomeView } from './app.styles';
+import { AppBody, AppContent, AppRoot, HomeView, SessionArea } from './app.styles';
 
 // The host stays while the drawer closes, so its title and fields do not flip mid-animation.
 type TDrawerState = { readonly isOpen: boolean; readonly host?: THost | undefined };
 
-/** The window: tabs on top; below, the Sallygate tab (side menu and a screen) or a session. */
+/** Two sessions side by side, four in a square, then three columns. */
+function splitColumns(sessionCount: number): number {
+  return sessionCount <= 4 ? 2 : 3;
+}
+
+/** The window: tabs on top; below, the side menu and a screen, a session or a grid of sessions. */
 export function App() {
   const { hosts, isLoading, loadError, saveHost, deleteHost, importSshConfig } = useHosts();
-  const { tabs, activeTabId, openTab, closeTab, selectTab } = useSessionTabs();
+  const { tabs, activeTabId, isSplit, openTab, closeTab, selectTab, toggleSplit } =
+    useSessionTabs();
+  const isHomeInFront = activeTabId === HOSTS_TAB_ID;
   const snippets = useSnippets();
   const [view, setView] = useState<TAppView>('hosts');
   const [drawer, setDrawer] = useState<TDrawerState>({ isOpen: false });
@@ -72,44 +79,64 @@ export function App() {
         activeTabId={activeTabId}
         onSelect={selectTab}
         onClose={closeTab}
+        isSplit={isSplit}
+        onToggleSplit={toggleSplit}
       />
-      <HomePanel hidden={activeTabId !== HOSTS_TAB_ID}>
-        <AppSideNav current={view} onNavigate={setView} />
-        <HomeView>
-          {view === 'hosts' ? (
-            <HostsView
-              hosts={hosts}
-              isLoading={isLoading}
-              loadError={loadError}
-              onNewHost={() => openDrawer()}
-              onConnect={connectTo}
-              onEdit={openDrawer}
-              onImportSshConfig={importSshConfig}
-            />
-          ) : null}
-          {view === 'snippets' ? (
-            <SnippetsView
-              snippets={snippets.snippets}
-              isLoading={snippets.isLoading}
-              loadError={snippets.error}
-              onSave={snippets.saveSnippet}
-              onDelete={snippets.deleteSnippet}
-            />
-          ) : null}
-          {view === 'keys' ? <KeysView hosts={hosts} /> : null}
-          {view === 'forwarding' ? <ForwardingView hosts={hosts} /> : null}
-          {view === 'knownHosts' ? <KnownHostsView /> : null}
-        </HomeView>
-      </HomePanel>
-      {tabs.map((tab) => (
-        <SessionPanel
-          key={tab.id}
-          request={tab.request}
-          isActive={activeTabId === tab.id}
-          snippets={snippets.snippets}
-          onCloseTab={() => closeTab(tab.id)}
+      <AppBody>
+        <AppSideNav
+          current={isHomeInFront ? view : undefined}
+          onNavigate={(next) => {
+            setView(next);
+            selectTab(HOSTS_TAB_ID);
+          }}
         />
-      ))}
+        <AppContent>
+          <HomeView hidden={!isHomeInFront}>
+            {view === 'hosts' ? (
+              <HostsView
+                hosts={hosts}
+                isLoading={isLoading}
+                loadError={loadError}
+                onNewHost={() => openDrawer()}
+                onConnect={connectTo}
+                onEdit={openDrawer}
+                onImportSshConfig={importSshConfig}
+              />
+            ) : null}
+            {view === 'snippets' ? (
+              <SnippetsView
+                snippets={snippets.snippets}
+                isLoading={snippets.isLoading}
+                loadError={snippets.error}
+                onSave={snippets.saveSnippet}
+                onDelete={snippets.deleteSnippet}
+              />
+            ) : null}
+            {view === 'keys' ? <KeysView hosts={hosts} /> : null}
+            {view === 'forwarding' ? <ForwardingView hosts={hosts} /> : null}
+            {view === 'knownHosts' ? <KnownHostsView /> : null}
+          </HomeView>
+          <SessionArea
+            hidden={isHomeInFront}
+            data-columns={isSplit ? splitColumns(tabs.length) : undefined}
+            style={isSplit ? { '--session-columns': splitColumns(tabs.length) } : undefined}
+          >
+            {tabs.map((tab) => (
+              <SessionPanel
+                key={tab.id}
+                request={tab.request}
+                title={tab.title}
+                isActive={activeTabId === tab.id}
+                isVisible={isSplit || activeTabId === tab.id}
+                isSplit={isSplit}
+                onActivate={() => selectTab(tab.id)}
+                snippets={snippets.snippets}
+                onCloseTab={() => closeTab(tab.id)}
+              />
+            ))}
+          </SessionArea>
+        </AppContent>
+      </AppBody>
       <HostDrawer
         open={drawer.isOpen}
         host={drawer.host}

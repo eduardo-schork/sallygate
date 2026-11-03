@@ -100,7 +100,8 @@ Update this block whenever the focus moves.
 ## Stage 4 — Power tools (0.3.0)
 
 - [x] SSH keys screen: lists private keys in `~/.ssh` with the hosts that use them, generates Ed25519 (optional passphrase, files 0600/0644, never overwrites), imports a key file, copies the public key
-- [x] Side menu in the Sallygate tab (Hosts, Snippets, then each new screen), following the owner's prototype; Vault teaser at the bottom
+- [x] Side menu (Hosts, SSH keys, Port forwarding, Snippets, Known hosts), following the owner's prototype; always on screen, also beside sessions; Vault teaser at the bottom
+- [x] Split view: every open session at once, two side by side, four in a square, then three columns; a click brings a session to the front
 - [x] Snippets: `snippets` context (`snippets.json`), Snippets screen, panel beside the terminal that types a snippet and presses Enter; eight starter snippets until the user saves their own list
 - [x] Port forwarding: local and SOCKS rules with on/off switches, one SSH connection per rule (ADR-0018); remote (`-R`) left for when it is asked for
 - [x] Jump host (`ProxyJump`): a host may go through another saved host (trusted, key without passphrase), for terminals, SFTP and forwarding rules (ADR-0019)
@@ -121,6 +122,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-03** — Side menu stays on screen in every tab; split view shows all open sessions in a grid (Split view button in the tab bar, active session outlined, snippets only in the session in front). `bun run check` passes (88 UI tests). Checked in the browser pane with four mocked sessions.
 - **2026-11-03** — Files view in two panes after the prototype (This Mac and the server, name, size, permissions, transfer bar), `LocalFiles` port and adapter, `RemoteEntry` renamed `FileEntry` with permissions, ADR-0020. Starter snippets on first run. `bun run check:full` passes (85 UI tests). Checked in the browser pane with a mocked core.
 - **2026-11-03** — App icon from the design system's SVGs (`src/presentation/desktop/icons/source/`): macOS `.icns` uses the small variant (no door frame) up to 32 px and the macOS variant (system mask margin) from 128 px; Windows and Linux icons come from the full icon, with the small one at 32 px. Checked in the built bundle.
 - **2026-11-03** — Jump host: `Host` gains an optional jump host, `log_in` goes through it with `direct-tcpip` + `connect_stream`, sessions and rules keep the jump connection; host form field; ADR-0019. `bun run check:full` passes (84 UI tests; 17 integration tests, 2 new for jumps). Stage 4 is built.

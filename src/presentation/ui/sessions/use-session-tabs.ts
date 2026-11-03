@@ -8,18 +8,27 @@ export type TSessionTab = {
   readonly request: TOpenSessionRequest;
 };
 
-/** The hosts screen is always the first tab and cannot be closed. */
+/** The Sallygate tab (hosts and the other screens) is always first and cannot be closed. */
 export const HOSTS_TAB_ID = 'hosts';
 
-type TTabsState = { readonly tabs: TSessionTab[]; readonly activeTabId: string };
+type TTabsState = {
+  readonly tabs: TSessionTab[];
+  readonly activeTabId: string;
+  /** Whether open sessions are shown side by side instead of one at a time. */
+  readonly wantsSplit: boolean;
+};
 
 /** The open session tabs and which tab is in front. */
 export function useSessionTabs() {
-  const [state, setState] = useState<TTabsState>({ tabs: [], activeTabId: HOSTS_TAB_ID });
+  const [state, setState] = useState<TTabsState>({
+    tabs: [],
+    activeTabId: HOSTS_TAB_ID,
+    wantsSplit: false,
+  });
 
   const openTab = useCallback((title: string, request: TOpenSessionRequest) => {
     const tab = { id: crypto.randomUUID(), title, request };
-    setState((current) => ({ tabs: [...current.tabs, tab], activeTabId: tab.id }));
+    setState((current) => ({ ...current, tabs: [...current.tabs, tab], activeTabId: tab.id }));
   }, []);
 
   const closeTab = useCallback((tabId: string) => {
@@ -31,7 +40,7 @@ export function useSessionTabs() {
         current.activeTabId === tabId
           ? (tabs[Math.max(0, index - 1)]?.id ?? HOSTS_TAB_ID)
           : current.activeTabId;
-      return { tabs, activeTabId };
+      return { ...current, tabs, activeTabId };
     });
   }, []);
 
@@ -39,5 +48,26 @@ export function useSessionTabs() {
     setState((current) => ({ ...current, activeTabId: tabId }));
   }, []);
 
-  return { tabs: state.tabs, activeTabId: state.activeTabId, openTab, closeTab, selectTab };
+  /** Turns split view on or off; turning it on from the Sallygate tab shows the first session. */
+  const toggleSplit = useCallback(() => {
+    setState((current) => ({
+      ...current,
+      wantsSplit: !current.wantsSplit,
+      activeTabId:
+        current.activeTabId === HOSTS_TAB_ID && !current.wantsSplit
+          ? (current.tabs[0]?.id ?? HOSTS_TAB_ID)
+          : current.activeTabId,
+    }));
+  }, []);
+
+  return {
+    tabs: state.tabs,
+    activeTabId: state.activeTabId,
+    // A split of one session is just that session.
+    isSplit: state.wantsSplit && state.tabs.length > 1,
+    openTab,
+    closeTab,
+    selectTab,
+    toggleSplit,
+  };
 }

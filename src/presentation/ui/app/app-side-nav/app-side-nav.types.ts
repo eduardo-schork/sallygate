@@ -2,6 +2,7 @@
 export type TAppView = 'hosts' | 'keys' | 'forwarding' | 'snippets' | 'knownHosts';
 
 export type TAppSideNavProps = {
-  readonly current: TAppView;
+  /** Missing while a session is in front: no screen of the menu is shown then. */
+  readonly current: TAppView | undefined;
   readonly onNavigate: (view: TAppView) => void;
 };

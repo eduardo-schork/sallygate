@@ -27,13 +27,23 @@ import { useConnection } from '../use-connection';
 import {
   SessionPanelMessage,
   SessionPanelRoot,
+  SessionTitle,
   SessionView,
   SessionViewBar,
 } from './session-panel.styles';
 import type { TSessionPanelProps } from './session-panel.types';
 
 /** One tab's session: it connects when the tab opens and closes when the tab closes. */
-export function SessionPanel({ request, isActive, onCloseTab, snippets }: TSessionPanelProps) {
+export function SessionPanel({
+  request,
+  isActive,
+  isVisible,
+  isSplit,
+  title,
+  onActivate,
+  onCloseTab,
+  snippets,
+}: TSessionPanelProps) {
   const { state, connect, trustHostKeyAndConnect, connectWithSecret, dismiss, sendInput, resize } =
     useConnection(request);
   const serverLabel = formatEndpoint(request.endpoint);
@@ -67,10 +77,18 @@ export function SessionPanel({ request, isActive, onCloseTab, snippets }: TSessi
   );
 
   return (
-    <SessionPanelRoot hidden={!isActive}>
+    <SessionPanelRoot
+      hidden={!isVisible}
+      aria-label={isSplit ? title : undefined}
+      data-split={isSplit}
+      data-active={isActive}
+      onMouseDownCapture={isActive ? undefined : onActivate}
+      onFocusCapture={isActive ? undefined : onActivate}
+    >
       {state.status === 'connected' ? (
         <>
           <SessionViewBar>
+            {isSplit ? <SessionTitle>{title}</SessionTitle> : null}
             <SegmentedControl label="Show" labelHidden>
               <Segment
                 name={`view-${state.sessionId}`}
@@ -103,7 +121,8 @@ export function SessionPanel({ request, isActive, onCloseTab, snippets }: TSessi
           </SessionViewBar>
           <SessionView hidden={view !== 'terminal'}>
             <TerminalView output={state.output} onInput={sendInput} onResize={resize} />
-            {isSnippetPanelOpen ? (
+            {/* In split view only the session in front has room for its snippets. */}
+            {isSnippetPanelOpen && (!isSplit || isActive) ? (
               <SnippetPanel
                 snippets={snippets}
                 onRun={(snippet) => sendInput(snippetInput(snippet.command))}
