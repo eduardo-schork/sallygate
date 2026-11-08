@@ -45,7 +45,7 @@ Update this block whenever the focus moves.
 - [x] Rust quality gates: `rustfmt`, Clippy with `-D warnings` + `pedantic` + `unwrap_used`/`expect_used`/`panic` denied, `unsafe_code` forbidden (workspace lints)
 - [x] TypeScript quality gates: ESLint strict type-checked, Prettier, faber-ui's kebab-case and no-hard-coded-design-values rules, and layer-boundary import rules
 - [x] Architecture check: `bun run check:architecture` fails if a crate gains a dependency that breaks the dependency rule
-- [x] CI on GitHub Actions (`check:full` on push and pull request) and a release workflow that drafts a GitHub Release with a universal macOS `.dmg` on `vX.Y.Z` tags (ADR-0021)
+- [x] CI on GitHub Actions (`check:full` on push and pull request) and a release workflow that drafts a GitHub Release with a universal macOS `.dmg` when `main` gets a new version (ADR-0021, ADR-0022)
 - [ ] Reserve the `sallygate` crate name on crates.io
 
 ## Stage 1 — SSH terminal (0.1.0, part A)
@@ -123,6 +123,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-08** — Releases start from a push to `main` with a new version instead of a tag (ADR-0022); release branches are optional.
 - **2026-11-08** — CI and release pipelines on GitHub Actions (ADR-0021), `CHANGELOG.md`. Not run yet: they run once `develop` is pushed and a version is tagged.
 - **2026-11-03** — Side menu stays on screen in every tab; split view shows all open sessions in a grid (Split view button in the tab bar, active session outlined, snippets only in the session in front). `bun run check` passes (88 UI tests). Checked in the browser pane with four mocked sessions.
 - **2026-11-03** — Files view in two panes after the prototype (This Mac and the server, name, size, permissions, transfer bar), `LocalFiles` port and adapter, `RemoteEntry` renamed `FileEntry` with permissions, ADR-0020. Starter snippets on first run. `bun run check:full` passes (85 UI tests). Checked in the browser pane with a mocked core.

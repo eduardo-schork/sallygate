@@ -1,27 +1,50 @@
-# Builds the macOS app for a version tag on `main` and drafts a GitHub Release (ADR-0021).
-# Tag after merging `release/x.y.z` into `main`: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+# Drafts a GitHub Release with the macOS app when `main` gets a version not released yet
+# (ADR-0022). Release: set the version (no `-dev`) in Cargo.toml and package.json, add it to
+# CHANGELOG.md, then push to `main`.
 name: Release
 
 on:
   push:
-    tags: ['v*.*.*']
+    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
-  macos:
-    runs-on: macos-latest
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.check.outputs.tag }}
+      should-release: ${{ steps.check.outputs.should-release }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check that the tag matches the app version
+      - name: Decide whether this version is new
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           version="$(grep -m1 '^version = ' Cargo.toml | cut -d '"' -f2)"
-          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "Tag $GITHUB_REF_NAME does not match Cargo.toml version $version" >&2
+          package_version="$(node -p 'require("./package.json").version')"
+          if [ "$version" != "$package_version" ]; then
+            echo "Cargo.toml has $version but package.json has $package_version" >&2
             exit 1
           fi
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          # A -dev version is work in progress; a version with a release (even a draft) is done.
+          if [ "${version%-dev}" != "$version" ] || gh release view "v$version" > /dev/null 2>&1; then
+            echo "should-release=false" >> "$GITHUB_OUTPUT"
+            echo "Nothing to release for $version."
+          else
+            echo "should-release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  macos:
+    needs: version
+    if: needs.version.outputs.should-release == 'true'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -41,8 +64,9 @@ jobs:
         with:
           tauriScript: bun run tauri
           args: --target universal-apple-darwin
-          tagName: ${{ github.ref_name }}
-          releaseName: Sallygate ${{ github.ref_name }}
+          tagName: ${{ needs.version.outputs.tag }}
+          releaseName: Sallygate ${{ needs.version.outputs.tag }}
+          releaseCommitish: ${{ github.sha }}
           releaseBody: See CHANGELOG.md for what changed.
           releaseDraft: true
           prerelease: false
