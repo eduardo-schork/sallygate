@@ -3791,7 +3791,7 @@ checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
 
 [[package]]
 name = "sallygate"
-version = "0.1.0-dev"
+version = "0.1.0"
 dependencies = [
  "base64 0.23.1",
  "sallygate-application",
@@ -3810,7 +3810,7 @@ dependencies = [
 
 [[package]]
 name = "sallygate-application"
-version = "0.1.0-dev"
+version = "0.1.0"
 dependencies = [
  "async-trait",
  "sallygate-domain",
@@ -3820,7 +3820,7 @@ dependencies = [
 
 [[package]]
 name = "sallygate-domain"
-version = "0.1.0-dev"
+version = "0.1.0"
 dependencies = [
  "thiserror 2.0.21",
  "uuid",
@@ -3829,7 +3829,7 @@ dependencies = [
 
 [[package]]
 name = "sallygate-infrastructure"
-version = "0.1.0-dev"
+version = "0.1.0"
 dependencies = [
  "async-trait",
  "rand",
