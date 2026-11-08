@@ -24,3 +24,4 @@ One file per decision, numbered in order. Copy [0000-template.md](0000-template.
 | [0018](0018-port-forwarding-rules.md)                       | Port forwarding rules, one SSH connection each                       | Accepted                                                    |
 | [0019](0019-jump-hosts.md)                                  | Jump hosts go through a saved host that needs no typed secret        | Accepted                                                    |
 | [0020](0020-two-pane-file-browser.md)                       | The file browser shows this Mac beside the server                    | Accepted                                                    |
+| [0021](0021-ci-and-release-pipelines.md)                    | GitHub Actions for checks and macOS releases                         | Accepted                                                    |

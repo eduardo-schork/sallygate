@@ -1,0 +1,46 @@
+# Runs the same checks as `bun run check:full` on every push and pull request (ADR-0021).
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      # Tauri compiles against the system webview, even for lint and unit tests.
+      - name: Install Linux libraries for Tauri
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libxdo-dev libssl-dev \
+            libayatana-appindicator3-dev librsvg2-dev
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      # rust-toolchain.toml picks the toolchain and its clippy and rustfmt.
+      - name: Install Rust
+        run: rustup show active-toolchain || rustup toolchain install
+
+      - uses: Swatinem/rust-cache@v2
+
+      - run: bun install --frozen-lockfile
+
+      - name: Start the SSH test server
+        run: scripts/test-ssh-server.sh up
+
+      - run: bun run check:full
+
+      # Contract tests regenerate the TypeScript types; a diff means they were not committed.
+      - name: Check that generated contracts are committed
+        run: git diff --exit-code -- src/presentation/ui

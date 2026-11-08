@@ -14,6 +14,7 @@ The step-by-step plan for building Sallygate, and the place where progress is tr
   3. Cut `release/0.1.0` to `0.3.0` (or one `0.3.0`) when the owner asks.
   4. Stage 5: the vault, starting with an ADR on its encryption design.
   5. Cut `release/0.1.0` and `release/0.2.0` when the owner asks (no week-long trial).
+- **Releasing:** on `release/x.y.z`, set the version in `Cargo.toml` and `package.json`, move _Unreleased_ in `CHANGELOG.md` under it, merge into `main` and `develop`, tag `vX.Y.Z` on `main` and push the tag; the Release workflow drafts the GitHub Release.
 - **Owner to do:** `exit` from a shell on their server; make `develop` the default branch on GitHub; register `sallygate.com`; reserve the `sallygate` crate.
 - **Open questions:** see [architecture.md](architecture.md#open-questions).
 - **Known shortcuts:** `grep -rn "shortcut:" src` (a dropped tunnel still shows as on; `~/.ssh/config` `Include`/`Match` skipped); design-system gaps are listed in [architecture.md](architecture.md#design-system-gaps).
@@ -44,7 +45,7 @@ Update this block whenever the focus moves.
 - [x] Rust quality gates: `rustfmt`, Clippy with `-D warnings` + `pedantic` + `unwrap_used`/`expect_used`/`panic` denied, `unsafe_code` forbidden (workspace lints)
 - [x] TypeScript quality gates: ESLint strict type-checked, Prettier, faber-ui's kebab-case and no-hard-coded-design-values rules, and layer-boundary import rules
 - [x] Architecture check: `bun run check:architecture` fails if a crate gains a dependency that breaks the dependency rule
-- [-] CI on GitHub Actions: deferred by the owner; local checks are the gate for now
+- [x] CI on GitHub Actions (`check:full` on push and pull request) and a release workflow that drafts a GitHub Release with a universal macOS `.dmg` on `vX.Y.Z` tags (ADR-0021)
 - [ ] Reserve the `sallygate` crate name on crates.io
 
 ## Stage 1 — SSH terminal (0.1.0, part A)
@@ -122,6 +123,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-08** — CI and release pipelines on GitHub Actions (ADR-0021), `CHANGELOG.md`. Not run yet: they run once `develop` is pushed and a version is tagged.
 - **2026-11-03** — Side menu stays on screen in every tab; split view shows all open sessions in a grid (Split view button in the tab bar, active session outlined, snippets only in the session in front). `bun run check` passes (88 UI tests). Checked in the browser pane with four mocked sessions.
 - **2026-11-03** — Files view in two panes after the prototype (This Mac and the server, name, size, permissions, transfer bar), `LocalFiles` port and adapter, `RemoteEntry` renamed `FileEntry` with permissions, ADR-0020. Starter snippets on first run. `bun run check:full` passes (85 UI tests). Checked in the browser pane with a mocked core.
 - **2026-11-03** — App icon from the design system's SVGs (`src/presentation/desktop/icons/source/`): macOS `.icns` uses the small variant (no door frame) up to 32 px and the macOS variant (system mask margin) from 128 px; Windows and Linux icons come from the full icon, with the small one at 32 px. Checked in the built bundle.

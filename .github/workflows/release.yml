@@ -1,0 +1,48 @@
+# Builds the macOS app for a version tag on `main` and drafts a GitHub Release (ADR-0021).
+# Tag after merging `release/x.y.z` into `main`: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check that the tag matches the app version
+        run: |
+          version="$(grep -m1 '^version = ' Cargo.toml | cut -d '"' -f2)"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match Cargo.toml version $version" >&2
+            exit 1
+          fi
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      # One app for Apple silicon and Intel Macs.
+      - name: Install Rust for both Mac architectures
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - uses: Swatinem/rust-cache@v2
+
+      - run: bun install --frozen-lockfile
+
+      # shortcut: the app is not signed or notarized, so macOS asks before opening it the first
+      # time; add the APPLE_* signing secrets to this step once there is a Developer ID.
+      - uses: tauri-apps/tauri-action@v0
+        with:
+          tauriScript: bun run tauri
+          args: --target universal-apple-darwin
+          tagName: ${{ github.ref_name }}
+          releaseName: Sallygate ${{ github.ref_name }}
+          releaseBody: See CHANGELOG.md for what changed.
+          releaseDraft: true
+          prerelease: false
