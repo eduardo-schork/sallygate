@@ -26,6 +26,7 @@ Sallygate holds the keys to the owner's servers. Treat every change here as secu
 - Unknown server keys need the user's confirmation; changed keys block the connection with no shortcut ([ADR-0014](decisions/0014-confirm-unknown-host-keys-before-connecting.md)).
 - The webview has Tauri's `core:default` permissions plus `dialog:allow-open` (the system open dialog, to pick files to upload) and a strict Content Security Policy in production builds. It reads no files itself: it passes paths the user picked or dropped to the core.
 - Updates install only after the user clicks, and only if the package's minisign signature matches the public key built into the app (ADR-0024). Release workflow actions are pinned to commit SHAs; pull request CI runs without secrets and with read-only access.
+- Local network access is asked for by macOS on first use (`NSLocalNetworkUsageDescription` in `Info.plist`); the user can revoke it in Privacy & Security → Local Network.
 - Forwarding rules listen on `127.0.0.1` only, so nothing on the network can use a server through the Mac; each rule logs in with the same server key check as a terminal (ADR-0018).
 - SFTP runs over the session's own SSH connection, so it inherits the server key check and the login; there is no second connection to trust (ADR-0017).
 - Command errors carry a code and a message written for the user; key material never goes into them.

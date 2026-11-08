@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "tauri": "tauri",
+    "build:app": "tauri build --debug --bundles app --config '{\"bundle\":{\"createUpdaterArtifacts\":false}}'",
     "typecheck": "tsc --noEmit",
     "lint": "node scripts/check-kebab-case-paths.mjs && eslint .",
     "lint:rust": "cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings",

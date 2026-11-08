@@ -124,6 +124,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-08** — Local network access: `Info.plist` declares `NSLocalNetworkUsageDescription`, so macOS asks before Sallygate reaches LAN servers (the owner's Windows at 192.168.x.x failed with "No route to host" while Terminal's `ssh` worked). `bun run build:app` builds a test bundle without the signed update package.
 - **2026-11-08** — Auto-update (ADR-0024): updater and process plugins, update notice, signed update package and `latest.json` in the Release workflow; updater key encrypted with a Keychain password; actions pinned to SHAs; secret scan of the tree and history (only public test fixtures). GitHub Actions is blocked by an account billing lock, so 0.1.0 is released from the owner's Mac.
 - **2026-11-08** — Releases like refined-redmine (ADR-0023): every merge into `main` with `feat`/`fix` commits is released, the version computed from the commits (`scripts/ci/release-plan.mjs`, tested), release commit and tag pushed by the workflow, `develop` synced. Tried `plan`, `apply` and `notes` locally (first version would be 0.1.0); not run on GitHub yet.
 - **2026-11-08** — Releases start from a push to `main` with a new version instead of a tag (ADR-0022); release branches are optional.

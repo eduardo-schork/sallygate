@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Merged by Tauri into the app's Info.plist. macOS asks for local network access with this
+     text the first time Sallygate connects to a server on the user's network (192.168.x.x…). -->
+<plist version="1.0">
+<dict>
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>Sallygate connects over SSH to servers on your local network, like a home server or a Raspberry Pi.</string>
+</dict>
+</plist>
