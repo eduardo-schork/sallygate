@@ -2,7 +2,9 @@
 
 What changed in each release, newest first. Versions follow [SemVer](https://semver.org) (ADR-0007).
 
-## Unreleased
+Add what a `feat` or `fix` commit changes under **Next version**. Merging into `main` releases it: the version comes from the commits, and this heading becomes that version (ADR-0023).
+
+## Next version
 
 ### Added
 

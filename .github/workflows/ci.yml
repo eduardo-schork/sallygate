@@ -1,14 +1,20 @@
-# Runs the same checks as `bun run check:full` on every push and pull request (ADR-0021).
+# Runs the same checks as `bun run check:full` on every push to develop, every pull request, and
+# before every release (ADR-0021, ADR-0023). No secrets are used here.
 name: CI
 
 on:
   push:
-    branches: [develop, main]
+    branches: [develop]
   pull_request:
     branches: [develop, main]
+  # The Release workflow runs these checks before it builds, so pushes to main are covered there.
+  workflow_call:
+
+permissions:
+  contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -16,6 +22,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       # Tauri compiles against the system webview, even for lint and unit tests.
       - name: Install Linux libraries for Tauri

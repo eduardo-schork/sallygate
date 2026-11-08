@@ -1,6 +1,8 @@
-# Drafts a GitHub Release with the macOS app when `main` gets a version not released yet
-# (ADR-0022). Release: set the version (no `-dev`) in Cargo.toml and package.json, add it to
-# CHANGELOG.md, then push to `main`.
+# Automatic release on every push to main (ADR-0023), like refined-redmine.
+# A push with a feat or fix commit since the last release becomes a new version: the version comes
+# from the commits, "## Next version" in CHANGELOG.md becomes that version, the macOS app is built,
+# and the release commit, tag and GitHub Release are published. Docs, chore and ci pushes release
+# nothing. Only the publish and sync jobs can write to the repository.
 name: Release
 
 on:
@@ -8,43 +10,41 @@ on:
     branches: [main]
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
-  version:
+  plan:
     runs-on: ubuntu-24.04
     outputs:
-      tag: ${{ steps.check.outputs.tag }}
-      should-release: ${{ steps.check.outputs.should-release }}
+      release: ${{ steps.plan.outputs.release }}
+      version: ${{ steps.plan.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: plan
+        run: node scripts/ci/release-plan.mjs plan
 
-      - name: Decide whether this version is new
-        id: check
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          version="$(grep -m1 '^version = ' Cargo.toml | cut -d '"' -f2)"
-          package_version="$(node -p 'require("./package.json").version')"
-          if [ "$version" != "$package_version" ]; then
-            echo "Cargo.toml has $version but package.json has $package_version" >&2
-            exit 1
-          fi
-          echo "tag=v$version" >> "$GITHUB_OUTPUT"
-          # A -dev version is work in progress; a version with a release (even a draft) is done.
-          if [ "${version%-dev}" != "$version" ] || gh release view "v$version" > /dev/null 2>&1; then
-            echo "should-release=false" >> "$GITHUB_OUTPUT"
-            echo "Nothing to release for $version."
-          else
-            echo "should-release=true" >> "$GITHUB_OUTPUT"
-          fi
+  check:
+    needs: plan
+    if: needs.plan.outputs.release == 'true'
+    uses: ./.github/workflows/ci.yml
 
-  macos:
-    needs: version
-    if: needs.version.outputs.should-release == 'true'
+  build:
+    needs: [plan, check]
+    if: needs.plan.outputs.release == 'true'
     runs-on: macos-latest
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -58,15 +58,92 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
+      # The app carries its version, so it is written before the build.
+      - run: node scripts/ci/release-plan.mjs apply "$VERSION"
+
       # shortcut: the app is not signed or notarized, so macOS asks before opening it the first
-      # time; add the APPLE_* signing secrets to this step once there is a Developer ID.
-      - uses: tauri-apps/tauri-action@v0
+      # time; add Apple signing secrets here once there is a Developer ID.
+      - run: bun run tauri build --target universal-apple-darwin --bundles dmg
+
+      - uses: actions/upload-artifact@v4
         with:
-          tauriScript: bun run tauri
-          args: --target universal-apple-darwin
-          tagName: ${{ needs.version.outputs.tag }}
-          releaseName: Sallygate ${{ needs.version.outputs.tag }}
-          releaseCommitish: ${{ github.sha }}
-          releaseBody: See CHANGELOG.md for what changed.
-          releaseDraft: true
-          prerelease: false
+          name: macos-app
+          path: target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+          retention-days: 3
+
+  publish:
+    needs: [plan, build]
+    if: needs.plan.outputs.release == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: macos-app
+          path: dist
+
+      - run: node scripts/ci/release-plan.mjs apply "$VERSION"
+
+      - name: Commit and tag the version
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Cargo.toml Cargo.lock package.json CHANGELOG.md
+          git commit -m "chore: release $VERSION"
+          git tag "v$VERSION"
+          # Atomic: if main moved during the build, nothing is pushed and nothing is released.
+          git push --atomic origin HEAD:main "refs/tags/v$VERSION"
+
+      - name: Publish the release
+        run: |
+          node scripts/ci/release-plan.mjs notes "$VERSION" > notes.md
+          gh release create "v$VERSION" dist/*.dmg --title "Sallygate $VERSION" --notes-file notes.md
+
+  # Brings the release commit (version and renamed CHANGELOG section) back to develop.
+  sync-develop:
+    needs: [plan, publish]
+    if: needs.plan.outputs.release == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Merge main into develop
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          # Usual case: develop has nothing beyond what was released, so it just moves forward.
+          if git merge --ff-only origin/main; then
+            git push origin HEAD:develop
+            echo "develop moved forward to v$VERSION." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if git merge --no-ff -m "chore: merge main into develop after v$VERSION" origin/main; then
+            git push origin HEAD:develop
+            echo "main merged into develop after v$VERSION." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git merge --abort
+          {
+            echo "### develop was not updated"
+            echo "v$VERSION was published, but merging main into develop has conflicts (usually CHANGELOG.md)."
+            echo "Run \`git checkout develop && git merge main\`, solve the conflicts and push develop."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::Conflicts merging main into develop; see the job summary."
+          exit 1

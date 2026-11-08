@@ -45,7 +45,7 @@ Update this block whenever the focus moves.
 - [x] Rust quality gates: `rustfmt`, Clippy with `-D warnings` + `pedantic` + `unwrap_used`/`expect_used`/`panic` denied, `unsafe_code` forbidden (workspace lints)
 - [x] TypeScript quality gates: ESLint strict type-checked, Prettier, faber-ui's kebab-case and no-hard-coded-design-values rules, and layer-boundary import rules
 - [x] Architecture check: `bun run check:architecture` fails if a crate gains a dependency that breaks the dependency rule
-- [x] CI on GitHub Actions (`check:full` on push and pull request) and a release workflow that drafts a GitHub Release with a universal macOS `.dmg` when `main` gets a new version (ADR-0021, ADR-0022)
+- [x] CI on GitHub Actions (`check:full` on push and pull request) and a release workflow that publishes a GitHub Release with a universal macOS `.dmg` on every merge into `main` with `feat`/`fix` commits, the version taken from the commits (ADR-0021, ADR-0023)
 - [ ] Reserve the `sallygate` crate name on crates.io
 
 ## Stage 1 — SSH terminal (0.1.0, part A)
@@ -123,6 +123,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-08** — Releases like refined-redmine (ADR-0023): every merge into `main` with `feat`/`fix` commits is released, the version computed from the commits (`scripts/ci/release-plan.mjs`, tested), release commit and tag pushed by the workflow, `develop` synced. Tried `plan`, `apply` and `notes` locally (first version would be 0.1.0); not run on GitHub yet.
 - **2026-11-08** — Releases start from a push to `main` with a new version instead of a tag (ADR-0022); release branches are optional.
 - **2026-11-08** — CI and release pipelines on GitHub Actions (ADR-0021), `CHANGELOG.md`. Not run yet: they run once `develop` is pushed and a version is tagged.
 - **2026-11-03** — Side menu stays on screen in every tab; split view shows all open sessions in a grid (Split view button in the tab bar, active session outlined, snippets only in the session in front). `bun run check` passes (88 UI tests). Checked in the browser pane with four mocked sessions.
