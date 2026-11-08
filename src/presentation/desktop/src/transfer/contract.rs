@@ -136,7 +136,9 @@ pub fn from_transfer_error(error: &TransferError) -> CommandError {
         TransferError::Unavailable(_) => {
             CommandError::new(CommandErrorKind::FilesUnavailable, error)
         }
-        TransferError::Remote(_) => CommandError::new(CommandErrorKind::FileOperationFailed, error),
+        TransferError::Remote(_) | TransferError::Local(_) => {
+            CommandError::new(CommandErrorKind::FileOperationFailed, error)
+        }
     }
 }
 

@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use russh_sftp::client::SftpSession;
 use russh_sftp::protocol::FileType;
 use sallygate_application::transfer::{RemoteFiles, RemoteFilesError, TransferProgress};
-use sallygate_domain::transfer::{EntryKind, FileEntry, file_name};
+use sallygate_domain::transfer::{EntryKind, FileEntry, file_name, free_name};
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 /// Bytes copied between progress reports.
@@ -35,20 +35,9 @@ fn entry_kind(file_type: FileType) -> EntryKind {
     }
 }
 
-/// `notes.txt`, then `notes (1).txt`, `notes (2).txt`… whichever is free in `folder`.
+/// A path in `folder` under a name not taken yet (`notes (1).txt`).
 fn free_local_path(folder: &Path, name: &str) -> PathBuf {
-    let candidate = folder.join(name);
-    if !candidate.exists() {
-        return candidate;
-    }
-    let (stem, extension) = match name.rsplit_once('.') {
-        Some((stem, extension)) if !stem.is_empty() => (stem, format!(".{extension}")),
-        _ => (name, String::new()),
-    };
-    (1..u32::MAX)
-        .map(|number| folder.join(format!("{stem} ({number}){extension}")))
-        .find(|path| !path.exists())
-        .unwrap_or(candidate)
+    folder.join(free_name(name, |candidate| folder.join(candidate).exists()))
 }
 
 /// Copies `reader` into `writer`, reporting progress after each chunk.

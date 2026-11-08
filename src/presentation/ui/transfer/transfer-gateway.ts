@@ -21,14 +21,15 @@ export type TTransferGateway = {
   readonly makeFolder: (sessionId: string, parent: string, name: string) => Promise<void>;
   readonly rename: (sessionId: string, path: string, newName: string) => Promise<void>;
   readonly delete: (sessionId: string, path: string, kind: TEntryKind) => Promise<void>;
-  /** Resolves with where the file landed in `localFolder`. */
+  /** Copies a file or a whole folder; resolves with where it landed in `localFolder`. */
   readonly download: (
     sessionId: string,
     remotePath: string,
+    kind: TEntryKind,
     localFolder: string,
     onProgress: TOnProgress,
   ) => Promise<string>;
-  /** Resolves with the remote path. */
+  /** Copies a file or a whole folder; resolves with the remote path. */
   readonly upload: (
     sessionId: string,
     localPath: string,
@@ -49,10 +50,11 @@ export const tauriTransferGateway: TTransferGateway = {
     invoke('make_remote_folder', { sessionId, parent, name }),
   rename: (sessionId, path, newName) => invoke('rename_remote_entry', { sessionId, path, newName }),
   delete: (sessionId, path, kind) => invoke('delete_remote_entry', { sessionId, path, kind }),
-  download: (sessionId, remotePath, localFolder, onProgress) =>
+  download: (sessionId, remotePath, kind, localFolder, onProgress) =>
     invoke<string>('download_remote_file', {
       sessionId,
       remotePath,
+      kind,
       localFolder,
       onProgress: progressChannel(onProgress),
     }),

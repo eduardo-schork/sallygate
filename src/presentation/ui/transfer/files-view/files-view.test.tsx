@@ -71,6 +71,7 @@ describe('FilesView', () => {
     expect(files.download).toHaveBeenCalledWith(
       's1',
       '/home/me/notes.txt',
+      'file',
       '/Users/me',
       expect.any(Function),
     );
@@ -109,5 +110,25 @@ describe('FilesView', () => {
 
     fireEvent.click(within(server).getByRole('button', { name: 'apps' }));
     expect(await within(server).findByText('This folder is empty.')).toBeInTheDocument();
+  });
+
+  it('SHOULD download a whole server folder to this Mac', async () => {
+    const files = fakeFiles();
+    renderView(files);
+    const server = screen.getByRole('region', { name: 'me@server:22' });
+
+    fireEvent.click(
+      await within(server).findByRole('button', { name: 'Download apps to This Mac' }),
+    );
+
+    await waitFor(() => {
+      expect(files.download).toHaveBeenCalledWith(
+        's1',
+        '/home/me/apps',
+        'folder',
+        '/Users/me',
+        expect.any(Function),
+      );
+    });
   });
 });

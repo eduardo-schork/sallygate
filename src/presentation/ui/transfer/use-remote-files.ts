@@ -97,7 +97,7 @@ export function useRemoteFiles(sessionId: string, files: TTransferGateway = taur
   const download = useCallback(
     (entry: TFileEntry, localFolder: string) =>
       track(entry.name, 'download', (onProgress) =>
-        files.download(sessionId, entry.path, localFolder, onProgress),
+        files.download(sessionId, entry.path, entry.kind, localFolder, onProgress),
       ),
     [files, sessionId, track],
   );

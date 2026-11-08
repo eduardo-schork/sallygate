@@ -90,14 +90,15 @@ pub fn list_local_folder(
     Ok(FolderListingDto::from(&folder))
 }
 
-/// Copies a remote file into `local_folder` (the Downloads folder when missing) and returns
-/// its local path.
+/// Copies a remote file or folder into `local_folder` (the Downloads folder when missing) and
+/// returns where it landed.
 #[tauri::command]
 pub async fn download_remote_file(
     app: AppHandle,
     services: State<'_, AppServices>,
     session_id: String,
     remote_path: String,
+    kind: EntryKindDto,
     local_folder: Option<String>,
     on_progress: Channel<TransferProgressDto>,
 ) -> Result<String, CommandError> {
@@ -113,6 +114,7 @@ pub async fn download_remote_file(
         .download(
             parse_session_id(&session_id)?,
             &remote_path,
+            kind.into(),
             &downloads,
             Arc::new(ChannelTransferProgress(on_progress)),
         )
@@ -121,7 +123,7 @@ pub async fn download_remote_file(
     Ok(local_path.to_string_lossy().into_owned())
 }
 
-/// Copies a local file into a remote folder and returns its remote path.
+/// Copies a local file or folder into a remote folder and returns its remote path.
 #[tauri::command]
 pub async fn upload_local_file(
     services: State<'_, AppServices>,

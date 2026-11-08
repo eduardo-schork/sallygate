@@ -96,7 +96,8 @@ Update this block whenever the focus moves.
 - [x] Upload (system dialog or files dropped on the window) and download (to Downloads) with a transfer list and progress
 - [x] Create, rename and delete files and folders (delete asks first)
 - [x] Two panes, this Mac beside the server, drag rows across to copy, downloads land in the Mac pane's folder (ADR-0020)
-- [ ] Later: drag from the app to Finder, folder upload and download
+- [x] Folder upload and download, with subfolders, one progress for the whole folder, free names instead of overwriting, links skipped
+- [ ] Later: drag from the app to Finder
 - [ ] Release `0.2.0`
 
 ## Stage 4 — Power tools (0.3.0)
@@ -124,6 +125,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-08** — Folder transfer both ways (`TransferFiles` walks the folder, `LocalFiles` gains `kind` and `make_folder`, shared `free_name` helper in the domain). `bun run check:full` passes (102 UI tests; new end-to-end folder test over SFTP against Docker). Releases stay on hold.
 - **2026-11-08** — Local network access: `Info.plist` declares `NSLocalNetworkUsageDescription`, so macOS asks before Sallygate reaches LAN servers (the owner's Windows at 192.168.x.x failed with "No route to host" while Terminal's `ssh` worked). `bun run build:app` builds a test bundle without the signed update package. The Info.plist alone did not help: the bundle was only linker-signed with a random identifier, so macOS never asked; `bundle.macOS.signingIdentity: "-"` ad-hoc signs the whole app as `dev.sallygate.app`, and the owner's Windows then answered (password prompt).
 - **2026-11-08** — Auto-update (ADR-0024): updater and process plugins, update notice, signed update package and `latest.json` in the Release workflow; updater key encrypted with a Keychain password; actions pinned to SHAs; secret scan of the tree and history (only public test fixtures). GitHub Actions is blocked by an account billing lock, so 0.1.0 is released from the owner's Mac.
 - **2026-11-08** — Releases like refined-redmine (ADR-0023): every merge into `main` with `feat`/`fix` commits is released, the version computed from the commits (`scripts/ci/release-plan.mjs`, tested), release commit and tag pushed by the workflow, `develop` synced. Tried `plan`, `apply` and `notes` locally (first version would be 0.1.0); not run on GitHub yet.

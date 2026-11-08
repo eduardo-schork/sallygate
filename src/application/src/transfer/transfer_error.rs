@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use super::RemoteFilesError;
+use super::{LocalFilesError, RemoteFilesError};
 use crate::sessions::{LiveSessionError, SessionCommandError};
 
 /// Why a file browser request failed. Messages are safe to show the user.
@@ -12,4 +12,6 @@ pub enum TransferError {
     Unavailable(#[from] LiveSessionError),
     #[error(transparent)]
     Remote(#[from] RemoteFilesError),
+    #[error(transparent)]
+    Local(#[from] LocalFilesError),
 }

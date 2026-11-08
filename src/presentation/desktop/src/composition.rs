@@ -12,7 +12,7 @@ use sallygate_application::sessions::{
 };
 use sallygate_application::snippets::{ManageSnippets, starter_snippets};
 use sallygate_application::transfer::{
-    BrowseLocalFiles, BrowseRemoteFiles, OpenFileSystems, TransferFiles,
+    BrowseLocalFiles, BrowseRemoteFiles, LocalFiles, OpenFileSystems, TransferFiles,
 };
 use sallygate_application::trust::{KnownHosts, ManageKnownHosts, TrustHostKey};
 use sallygate_application::tunnels::ManageTunnels;
@@ -72,6 +72,7 @@ pub fn compose(app_data_folder: &Path) -> Result<AppServices, CompositionError> 
     ));
     let registry = Arc::new(SessionRegistry::new());
     let file_systems = Arc::new(OpenFileSystems::new(Arc::clone(&registry)));
+    let local_files: Arc<dyn LocalFiles> = Arc::new(LocalFileSystem::new(home.clone()));
     let hosts: Arc<dyn HostRepository> =
         Arc::new(JsonHostRepository::new(app_data_folder.join("hosts.json")));
 
@@ -102,9 +103,9 @@ pub fn compose(app_data_folder: &Path) -> Result<AppServices, CompositionError> 
             key_folder,
             "~/.ssh".to_owned(),
         ))),
-        browse_local_files: BrowseLocalFiles::new(Arc::new(LocalFileSystem::new(home.clone()))),
+        browse_local_files: BrowseLocalFiles::new(Arc::clone(&local_files)),
         browse_remote_files: BrowseRemoteFiles::new(Arc::clone(&file_systems)),
-        transfer_files: TransferFiles::new(file_systems),
+        transfer_files: TransferFiles::new(file_systems, local_files),
         snippets: ManageSnippets::new(Arc::new(JsonSnippetRepository::new(
             app_data_folder.join("snippets.json"),
             starter_snippets(),

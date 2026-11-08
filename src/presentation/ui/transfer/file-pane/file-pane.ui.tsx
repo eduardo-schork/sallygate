@@ -31,6 +31,9 @@ const ENTRY_ICONS = {
   link: <LinkIcon aria-hidden="true" />,
 } as const;
 
+/** Files and folders copy across; links are not followed, so they stay put. */
+const isCopyable = (entry: TFileEntry) => entry.kind !== 'link';
+
 type TDraggedEntry = { readonly side: TFilePaneProps['side']; readonly entry: TFileEntry };
 
 function readDraggedEntry(event: DragEvent): TDraggedEntry | undefined {
@@ -39,8 +42,8 @@ function readDraggedEntry(event: DragEvent): TDraggedEntry | undefined {
 }
 
 /**
- * One machine's files: a folder to browse, files to drag to the other pane, and a drop zone
- * for files dragged from it.
+ * One machine's files: a folder to browse, files and folders to drag to the other pane, and a
+ * drop zone for what is dragged from it.
  */
 export function FilePane({
   side,
@@ -52,7 +55,7 @@ export function FilePane({
   onGoUp,
   toolbar,
   renderActions,
-  onDropFile,
+  onDropEntry,
 }: TFilePaneProps) {
   const [isDropTarget, setIsDropTarget] = useState(false);
   const acceptsDrag = (event: DragEvent) => event.dataTransfer.types.includes(ENTRY_DRAG_TYPE);
@@ -60,9 +63,9 @@ export function FilePane({
   const handleDrop = (event: DragEvent) => {
     setIsDropTarget(false);
     const dragged = readDraggedEntry(event);
-    if (dragged && dragged.side !== side && dragged.entry.kind === 'file') {
+    if (dragged && dragged.side !== side && isCopyable(dragged.entry)) {
       event.preventDefault();
-      onDropFile(dragged.entry);
+      onDropEntry(dragged.entry);
     }
   };
 
@@ -130,7 +133,7 @@ export function FilePane({
         {folder?.entries.map((entry) => (
           <EntryRow
             key={entry.path}
-            draggable={entry.kind === 'file'}
+            draggable={isCopyable(entry)}
             onDragStart={(event: DragEvent) => startDrag(event, entry)}
           >
             {entry.kind === 'folder' ? (

@@ -63,7 +63,7 @@ function percent(transfer: TTransfer): string {
   return `${String(Math.round(share * 100))}%`;
 }
 
-/** This Mac beside the server: browse both, and drag files across to copy them. */
+/** This Mac beside the server: browse both, and drag files or folders across to copy them. */
 export function FilesView({ sessionId, serverLabel, isActive, files }: TFilesViewProps) {
   const local = useLocalFiles(files);
   const remote = useRemoteFiles(sessionId, files);
@@ -117,7 +117,7 @@ export function FilesView({ sessionId, serverLabel, isActive, files }: TFilesVie
             </IconButton>
           }
           renderActions={(entry) =>
-            entry.kind === 'file' ? (
+            entry.kind !== 'link' ? (
               <IconButton
                 {...iconButton}
                 aria-label={`Upload ${entry.name} to the server`}
@@ -127,7 +127,7 @@ export function FilesView({ sessionId, serverLabel, isActive, files }: TFilesVie
               </IconButton>
             ) : null
           }
-          onDropFile={(entry) => void download(entry)}
+          onDropEntry={(entry) => void download(entry)}
         />
         <FilePane
           side="remote"
@@ -164,7 +164,7 @@ export function FilesView({ sessionId, serverLabel, isActive, files }: TFilesVie
           }
           renderActions={(entry) => (
             <>
-              {entry.kind === 'file' ? (
+              {entry.kind !== 'link' ? (
                 <IconButton
                   {...iconButton}
                   aria-label={`Download ${entry.name} to ${LOCAL_LABEL}`}
@@ -189,7 +189,7 @@ export function FilesView({ sessionId, serverLabel, isActive, files }: TFilesVie
               </IconButton>
             </>
           )}
-          onDropFile={(entry) => void remote.upload([entry.path])}
+          onDropEntry={(entry) => void remote.upload([entry.path])}
         />
       </Panes>
 

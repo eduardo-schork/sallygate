@@ -8,7 +8,7 @@ use async_trait::async_trait;
 use sallygate_domain::sessions::{SessionId, TerminalSize};
 use sallygate_domain::transfer::{EntryKind, FileEntry, file_name};
 
-use super::{RemoteFiles, RemoteFilesError, TransferProgress};
+use super::{LocalFiles, LocalFilesError, RemoteFiles, RemoteFilesError, TransferProgress};
 use crate::sessions::{LiveSession, LiveSessionError, SessionRegistry};
 
 pub const HOME: &str = "/home/me";
@@ -29,7 +29,7 @@ impl FakeRemoteFiles {
                 name: file_name(path).to_owned(),
                 path: (*path).to_owned(),
                 kind: *kind,
-                size_bytes: 0,
+                size_bytes: if *kind == EntryKind::File { 10 } else { 0 },
                 modified_at: None,
                 permissions: None,
             })
@@ -146,4 +146,72 @@ pub struct IgnoreProgress;
 
 impl TransferProgress for IgnoreProgress {
     fn advanced(&self, _done_bytes: u64, _total_bytes: u64) {}
+}
+
+/// This computer's files in memory: the entries a folder holds, and the folders made.
+#[derive(Default)]
+pub struct FakeLocalFiles {
+    pub entries: Vec<FileEntry>,
+    pub made_folders: Mutex<Vec<String>>,
+}
+
+impl FakeLocalFiles {
+    pub fn with(entries: &[(&str, EntryKind)]) -> Arc<Self> {
+        Arc::new(Self {
+            entries: FakeRemoteFiles::with(entries)
+                .entries
+                .lock()
+                .unwrap()
+                .clone(),
+            made_folders: Mutex::new(Vec::new()),
+        })
+    }
+}
+
+impl LocalFiles for FakeLocalFiles {
+    fn home(&self) -> String {
+        "/Users/me".to_owned()
+    }
+
+    fn list(&self, folder: &str) -> Result<Vec<FileEntry>, LocalFilesError> {
+        let prefix = format!("{}/", folder.trim_end_matches('/'));
+        Ok(self
+            .entries
+            .iter()
+            .filter(|entry| {
+                entry
+                    .path
+                    .strip_prefix(&prefix)
+                    .is_some_and(|rest| !rest.contains('/'))
+            })
+            .cloned()
+            .collect())
+    }
+
+    fn kind(&self, path: &Path) -> Result<EntryKind, LocalFilesError> {
+        let path = path.to_string_lossy();
+        self.entries
+            .iter()
+            .find(|entry| entry.path == path)
+            .map(|entry| entry.kind)
+            .ok_or_else(|| LocalFilesError(format!("{path} does not exist")))
+    }
+
+    fn make_folder(&self, path: &Path) -> Result<(), LocalFilesError> {
+        self.made_folders
+            .lock()
+            .unwrap()
+            .push(path.to_string_lossy().into_owned());
+        Ok(())
+    }
+}
+
+/// Keeps every progress report, to check what the UI would show.
+#[derive(Default)]
+pub struct RecordingProgress(pub Mutex<Vec<(u64, u64)>>);
+
+impl TransferProgress for RecordingProgress {
+    fn advanced(&self, done_bytes: u64, total_bytes: u64) {
+        self.0.lock().unwrap().push((done_bytes, total_bytes));
+    }
 }

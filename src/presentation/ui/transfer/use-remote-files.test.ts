@@ -29,7 +29,7 @@ function fakeFiles(): TTransferGateway & { readonly calls: string[] } {
       return Promise.resolve();
     },
     listLocalFolder: (path = '/Users/me') => Promise.resolve({ path, entries: [] }),
-    download: (_sessionId, remotePath, localFolder, onProgress) => {
+    download: (_sessionId, remotePath, _kind, localFolder, onProgress) => {
       onProgress({ doneBytes: 5, totalBytes: 10 });
       return Promise.resolve(`${localFolder}/${remotePath.split('/').pop() ?? ''}`);
     },

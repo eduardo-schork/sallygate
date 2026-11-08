@@ -19,6 +19,6 @@ export type TFilePaneProps = {
   readonly toolbar?: ReactNode;
   /** The buttons at the end of an entry's row. */
   readonly renderActions: (entry: TFileEntry) => ReactNode;
-  /** A file dragged from the other pane was dropped here. */
-  readonly onDropFile: (entry: TFileEntry) => void;
+  /** A file or folder dragged from the other pane was dropped here. */
+  readonly onDropEntry: (entry: TFileEntry) => void;
 };
