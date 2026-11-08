@@ -18,3 +18,4 @@ Add what a `feat` or `fix` commit changes under **Next version**. Merging into `
 - Jump hosts (`ProxyJump`).
 - Split view: every open session on screen at once.
 - The Sallygate design system: palette, Manrope and JetBrains Mono, app icon.
+- Automatic updates: the app offers each new release and installs it after checking its signature.

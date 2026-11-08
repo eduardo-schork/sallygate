@@ -13,6 +13,7 @@ import type { TCommandError } from '../shared/command-error-contract';
 import { SnippetsView } from '../snippets/snippets-view';
 import { KnownHostsView } from '../trust/known-hosts-view';
 import { ForwardingView } from '../tunnels/forwarding-view';
+import { UpdateNotice } from '../updates/update-notice';
 import { useSnippets } from '../snippets/use-snippets';
 import { AppSideNav, type TAppView } from './app-side-nav';
 import { AppBody, AppContent, AppRoot, HomeView, SessionArea } from './app.styles';
@@ -82,6 +83,7 @@ export function App() {
         isSplit={isSplit}
         onToggleSplit={toggleSplit}
       />
+      <UpdateNotice />
       <AppBody>
         <AppSideNav
           current={isHomeInFront ? view : undefined}

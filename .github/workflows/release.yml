@@ -2,7 +2,8 @@
 # A push with a feat or fix commit since the last release becomes a new version: the version comes
 # from the commits, "## Next version" in CHANGELOG.md becomes that version, the macOS app is built,
 # and the release commit, tag and GitHub Release are published. Docs, chore and ci pushes release
-# nothing. Only the publish and sync jobs can write to the repository.
+# nothing. Only the publish and sync jobs can write to the repository. Actions are pinned to commit
+# SHAs, so a moved tag cannot change what runs next to the signing key.
 name: Release
 
 on:
@@ -23,7 +24,7 @@ jobs:
       release: ${{ steps.plan.outputs.release }}
       version: ${{ steps.plan.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -42,11 +43,11 @@ jobs:
     env:
       VERSION: ${{ needs.plan.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version-file: package.json
 
@@ -54,21 +55,29 @@ jobs:
       - name: Install Rust for both Mac architectures
         run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
 
       - run: bun install --frozen-lockfile
 
       # The app carries its version, so it is written before the build.
       - run: node scripts/ci/release-plan.mjs apply "$VERSION"
 
-      # shortcut: the app is not signed or notarized, so macOS asks before opening it the first
-      # time; add Apple signing secrets here once there is a Developer ID.
-      - run: bun run tauri build --target universal-apple-darwin --bundles dmg
+      # The update package is signed with the updater key (ADR-0024), so installed apps accept it.
+      # shortcut: the app is not signed or notarized by Apple, so macOS asks before opening it the
+      # first time; add Apple signing secrets here once there is a Developer ID.
+      - run: bun run tauri build --target universal-apple-darwin --bundles app,dmg
+        # Only this step sees the key; it stays in GitHub secrets and never reaches the logs.
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: macos-app
-          path: target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          path: |
+            target/universal-apple-darwin/release/bundle/dmg/*.dmg
+            target/universal-apple-darwin/release/bundle/macos/Sallygate.app.tar.gz
+            target/universal-apple-darwin/release/bundle/macos/Sallygate.app.tar.gz.sig
           if-no-files-found: error
           retention-days: 3
 
@@ -82,11 +91,11 @@ jobs:
       VERSION: ${{ needs.plan.outputs.version }}
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: macos-app
           path: dist
@@ -103,10 +112,14 @@ jobs:
           # Atomic: if main moved during the build, nothing is pushed and nothing is released.
           git push --atomic origin HEAD:main "refs/tags/v$VERSION"
 
+      # latest.json is what installed apps read to find this version (ADR-0024).
       - name: Publish the release
         run: |
           node scripts/ci/release-plan.mjs notes "$VERSION" > notes.md
-          gh release create "v$VERSION" dist/*.dmg --title "Sallygate $VERSION" --notes-file notes.md
+          node scripts/ci/release-plan.mjs updater-manifest "$VERSION" dist/macos/Sallygate.app.tar.gz.sig > dist/latest.json
+          # The artifact keeps the bundle folders: dist/dmg and dist/macos.
+          gh release create "v$VERSION" dist/dmg/*.dmg dist/macos/Sallygate.app.tar.gz dist/latest.json \
+            --title "Sallygate $VERSION" --notes-file notes.md
 
   # Brings the release commit (version and renamed CHANGELOG section) back to develop.
   sync-develop:
@@ -118,7 +131,7 @@ jobs:
     env:
       VERSION: ${{ needs.plan.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: develop
           fetch-depth: 0

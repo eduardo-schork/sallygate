@@ -91,3 +91,17 @@ export function packageJsonWithVersion(packageJson, version) {
   manifest.version = version;
   return `${JSON.stringify(manifest, null, 2)}\n`;
 }
+
+/** Apple silicon and Intel Macs both get the one universal app. */
+const MAC_PLATFORMS = ['darwin-aarch64', 'darwin-x86_64'];
+
+/**
+ * The `latest.json` the app's updater reads from the latest GitHub Release: the version, its
+ * notes, and for each Mac platform the signed update package.
+ */
+export function updaterManifest({ version, notes, publishedAt, signature, url }) {
+  const platforms = Object.fromEntries(
+    MAC_PLATFORMS.map((platform) => [platform, { signature: signature.trim(), url }]),
+  );
+  return `${JSON.stringify({ version, notes, pub_date: publishedAt, platforms }, null, 2)}\n`;
+}

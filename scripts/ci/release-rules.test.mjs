@@ -7,6 +7,7 @@ import {
   nextVersion,
   nextVersionItems,
   packageJsonWithVersion,
+  updaterManifest,
   versionNotes,
 } from './release-rules.mjs';
 
@@ -83,5 +84,26 @@ describe('version files', () => {
   it('sets the version in package.json', () => {
     const manifest = JSON.stringify({ name: 'sallygate', version: '0.1.0-dev' }, null, 2);
     expect(JSON.parse(packageJsonWithVersion(manifest, '0.2.0')).version).toBe('0.2.0');
+  });
+});
+
+describe('updaterManifest', () => {
+  it('points both Mac platforms at the signed universal package', () => {
+    const manifest = JSON.parse(
+      updaterManifest({
+        version: '0.2.0',
+        notes: '- Split view',
+        publishedAt: '2026-11-08T20:00:00Z',
+        signature: 'c2lnbmF0dXJl\n',
+        url: 'https://example.com/Sallygate.app.tar.gz',
+      }),
+    );
+    expect(manifest.version).toBe('0.2.0');
+    expect(manifest.pub_date).toBe('2026-11-08T20:00:00Z');
+    expect(manifest.platforms['darwin-aarch64']).toEqual({
+      signature: 'c2lnbmF0dXJl',
+      url: 'https://example.com/Sallygate.app.tar.gz',
+    });
+    expect(manifest.platforms['darwin-x86_64']).toEqual(manifest.platforms['darwin-aarch64']);
   });
 });

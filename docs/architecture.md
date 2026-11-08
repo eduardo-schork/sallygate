@@ -131,6 +131,7 @@ src/
         │                       use-connection.ts, use-session-tabs.ts, session-request.ts,
         │                       session-output-buffer.ts, session-tab-bar/, session-panel/,
         │                       terminal-view/, session-ended-notice/
+        ├── updates/            updates-gateway.ts, use-app-update.ts, update-notice/
         ├── tunnels/            tunnels-gateway.ts, tunnels-contract.ts (generated), use-tunnels.ts,
         │                       describe-tunnel.ts, forwarding-view/, tunnel-dialog/
         ├── snippets/           snippets-gateway.ts, snippets-contract.ts (generated), use-snippets.ts,

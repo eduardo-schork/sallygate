@@ -3,6 +3,8 @@
 //   node scripts/ci/release-plan.mjs apply <version> → writes the version to Cargo.toml, Cargo.lock,
 //                                                       package.json and CHANGELOG.md
 //   node scripts/ci/release-plan.mjs notes <version> → prints that version's CHANGELOG notes
+//   node scripts/ci/release-plan.mjs updater-manifest <version> <signature file>
+//                                                     → prints the latest.json for the app's updater
 // No token is used here: this script only reads git history and writes local files.
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
@@ -16,6 +18,7 @@ import {
   nextVersion,
   nextVersionItems,
   packageJsonWithVersion,
+  updaterManifest,
   versionNotes,
 } from './release-rules.mjs';
 
@@ -83,16 +86,40 @@ function apply(version) {
   );
 }
 
+/** Where every release's update package is downloaded from. */
+const RELEASES_URL = 'https://github.com/eduardo-schork/sallygate/releases/download';
+const UPDATE_PACKAGE = 'Sallygate.app.tar.gz';
+
+function manifest(version, signatureFile) {
+  if (!isValidVersion(version ?? '') || !signatureFile) {
+    throw new Error('Usage: release-plan.mjs updater-manifest <version> <signature file>');
+  }
+  console.log(
+    updaterManifest({
+      version,
+      notes: versionNotes(readFileSync('CHANGELOG.md', 'utf8'), version),
+      publishedAt: new Date().toISOString(),
+      signature: readFileSync(signatureFile, 'utf8'),
+      url: `${RELEASES_URL}/v${version}/${UPDATE_PACKAGE}`,
+    }).trimEnd(),
+  );
+}
+
 function notes(version) {
   console.log(versionNotes(readFileSync('CHANGELOG.md', 'utf8'), version));
 }
 
-const [command, argument] = process.argv.slice(2);
+const [command, argument, extra] = process.argv.slice(2);
 try {
   if (command === 'plan') plan();
   else if (command === 'apply') apply(argument);
   else if (command === 'notes') notes(argument);
-  else throw new Error('Usage: release-plan.mjs plan | apply <version> | notes <version>');
+  else if (command === 'updater-manifest') manifest(argument, extra);
+  else {
+    throw new Error(
+      'Usage: release-plan.mjs plan | apply <version> | notes <version> | updater-manifest <version> <signature file>',
+    );
+  }
 } catch (error) {
   console.error(`✖ ${error.message}`);
   process.exit(1);

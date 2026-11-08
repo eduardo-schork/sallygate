@@ -3,9 +3,15 @@
   "productName": "Sallygate",
   "identifier": "dev.sallygate.app",
   "build": {
-    "beforeDevCommand": { "script": "bun run dev", "cwd": "../../.." },
+    "beforeDevCommand": {
+      "script": "bun run dev",
+      "cwd": "../../.."
+    },
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": { "script": "bun run build", "cwd": "../../.." },
+    "beforeBuildCommand": {
+      "script": "bun run build",
+      "cwd": "../../.."
+    },
     "frontendDist": "../../../dist"
   },
   "app": {
@@ -32,6 +38,15 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM0MDE5RURBRDkwMDMzQjMKUldTek13RFoycDRCTlBkZU1tUy91Nnk3UC9RVXFyOWNFTUxoOEI0L3QxWUNPb3kyT2FGZ05rcm0K",
+      "endpoints": [
+        "https://github.com/eduardo-schork/sallygate/releases/latest/download/latest.json"
+      ]
+    }
   }
 }

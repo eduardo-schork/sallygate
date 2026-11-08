@@ -15,7 +15,7 @@ The step-by-step plan for building Sallygate, and the place where progress is tr
   4. Stage 5: the vault, starting with an ADR on its encryption design.
   5. Cut `release/0.1.0` and `release/0.2.0` when the owner asks (no week-long trial).
 - **Releasing:** on `release/x.y.z`, set the version in `Cargo.toml` and `package.json`, move _Unreleased_ in `CHANGELOG.md` under it, merge into `main` and `develop`, tag `vX.Y.Z` on `main` and push the tag; the Release workflow drafts the GitHub Release.
-- **Owner to do:** `exit` from a shell on their server; make `develop` the default branch on GitHub; register `sallygate.com`; reserve the `sallygate` crate.
+- **Owner to do:** back up `~/.tauri/sallygate-updater.key` with its Keychain password; add the secrets `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` to the repository; clear the GitHub billing lock so Actions run; `exit` from a shell on their server; make `develop` the default branch on GitHub; register `sallygate.com`; reserve the `sallygate` crate.
 - **Open questions:** see [architecture.md](architecture.md#open-questions).
 - **Known shortcuts:** `grep -rn "shortcut:" src` (a dropped tunnel still shows as on; `~/.ssh/config` `Include`/`Match` skipped); design-system gaps are listed in [architecture.md](architecture.md#design-system-gaps).
 - **Blocked on:** nothing.
@@ -45,6 +45,7 @@ Update this block whenever the focus moves.
 - [x] Rust quality gates: `rustfmt`, Clippy with `-D warnings` + `pedantic` + `unwrap_used`/`expect_used`/`panic` denied, `unsafe_code` forbidden (workspace lints)
 - [x] TypeScript quality gates: ESLint strict type-checked, Prettier, faber-ui's kebab-case and no-hard-coded-design-values rules, and layer-boundary import rules
 - [x] Architecture check: `bun run check:architecture` fails if a crate gains a dependency that breaks the dependency rule
+- [x] Auto-update: Tauri updater reads `latest.json` from the latest release, signed packages, notice under the tabs (ADR-0024)
 - [x] CI on GitHub Actions (`check:full` on push and pull request) and a release workflow that publishes a GitHub Release with a universal macOS `.dmg` on every merge into `main` with `feat`/`fix` commits, the version taken from the commits (ADR-0021, ADR-0023)
 - [ ] Reserve the `sallygate` crate name on crates.io
 
@@ -123,6 +124,7 @@ To be detailed later.
 
 Newest first. One line per meaningful step: date, what happened, link to the PR or commit.
 
+- **2026-11-08** — Auto-update (ADR-0024): updater and process plugins, update notice, signed update package and `latest.json` in the Release workflow; updater key encrypted with a Keychain password; actions pinned to SHAs; secret scan of the tree and history (only public test fixtures). GitHub Actions is blocked by an account billing lock, so 0.1.0 is released from the owner's Mac.
 - **2026-11-08** — Releases like refined-redmine (ADR-0023): every merge into `main` with `feat`/`fix` commits is released, the version computed from the commits (`scripts/ci/release-plan.mjs`, tested), release commit and tag pushed by the workflow, `develop` synced. Tried `plan`, `apply` and `notes` locally (first version would be 0.1.0); not run on GitHub yet.
 - **2026-11-08** — Releases start from a push to `main` with a new version instead of a tag (ADR-0022); release branches are optional.
 - **2026-11-08** — CI and release pipelines on GitHub Actions (ADR-0021), `CHANGELOG.md`. Not run yet: they run once `develop` is pushed and a version is tagged.

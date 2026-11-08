@@ -27,3 +27,4 @@ One file per decision, numbered in order. Copy [0000-template.md](0000-template.
 | [0021](0021-ci-and-release-pipelines.md)                    | GitHub Actions for checks and macOS releases                            | Superseded in part by [0022](0022-release-on-push-to-main.md)           |
 | [0022](0022-release-on-push-to-main.md)                     | A new version on main releases itself                                   | Superseded by [0023](0023-version-from-commits.md)                      |
 | [0023](0023-version-from-commits.md)                        | Every merge into main releases, with the version taken from the commits | Accepted                                                                |
+| [0024](0024-signed-auto-updates.md)                         | The app updates itself from signed GitHub Releases                      | Accepted                                                                |
